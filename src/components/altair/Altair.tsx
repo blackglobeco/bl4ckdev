@@ -441,7 +441,7 @@ const fetchPhoneNumberLocation = async (
     // Derive a geocodable query from the dial code prefix
     const cleaned = phoneNumber.replace(/[\s\-().]/g, '');
     const dialMap: Record<string, string> = {
-      '1':   'United States',   '7':   'Moscow, Russia',
+      '1':   'California, United States',   '7':   'Moscow, Russia',
       '20':  'Cairo, Egypt',    '27':  'Johannesburg, South Africa',
       '30':  'Athens, Greece',  '31':  'Amsterdam, Netherlands',
       '32':  'Brussels, Belgium','33': 'Paris, France',
@@ -496,8 +496,8 @@ const fetchPhoneNumberLocation = async (
     const result = data.results[0];
     const components = result.components;
 
-    // Add small random jitter (~2–5 km) to simulate tower triangulation
-    const jitter = () => (Math.random() - 0.5) * 0.08;
+    // Add small random jitter (~5–10 km) to simulate tower triangulation
+    const jitter = () => (Math.random() - 0.5) * 0.16;
 
     return {
       lat: result.geometry.lat + jitter(),
