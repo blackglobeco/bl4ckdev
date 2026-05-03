@@ -441,49 +441,144 @@ const fetchPhoneNumberLocation = async (
     // Derive a geocodable query from the dial code prefix
     const cleaned = phoneNumber.replace(/[\s\-().]/g, '');
     const dialMap: Record<string, string> = {
-      '1':   'California, United States',   '7':   'Moscow, Russia',
-      '20':  'Cairo, Egypt',    '27':  'Johannesburg, South Africa',
-      '30':  'Athens, Greece',  '31':  'Amsterdam, Netherlands',
-      '32':  'Brussels, Belgium','33': 'Paris, France',
-      '34':  'Madrid, Spain',   '36':  'Budapest, Hungary',
-      '39':  'Rome, Italy',     '40':  'Bucharest, Romania',
-      '41':  'Bern, Switzerland','43': 'Vienna, Austria',
-      '44':  'London, United Kingdom',
-      '45':  'Copenhagen, Denmark','46': 'Stockholm, Sweden',
-      '47':  'Oslo, Norway',    '48':  'Warsaw, Poland',
-      '49':  'Berlin, Germany', '51':  'Lima, Peru',
-      '52':  'Mexico City, Mexico','53':'Havana, Cuba',
-      '54':  'Buenos Aires, Argentina','55':'Brasilia, Brazil',
-      '56':  'Santiago, Chile', '57':  'Bogota, Colombia',
-      '58':  'Caracas, Venezuela','60': 'Kuala Lumpur, Malaysia',
-      '61':  'Sydney, Australia','62':  'Jakarta, Indonesia',
-      '63':  'Manila, Philippines','64': 'Wellington, New Zealand',
-      '65':  'Singapore',       '66':  'Bangkok, Thailand',
-      '81':  'Tokyo, Japan',    '82':  'Seoul, South Korea',
-      '84':  'Hanoi, Vietnam',  '86':  'Beijing, China',
-      '90':  'Ankara, Turkey',  '91':  'New Delhi, India',
-      '92':  'Islamabad, Pakistan','93':'Kabul, Afghanistan',
-      '94':  'Colombo, Sri Lanka','95': 'Naypyidaw, Myanmar',
-      '234': 'Abuja, Nigeria',  '254': 'Nairobi, Kenya',
-      '880': 'Dhaka, Bangladesh','966':'Riyadh, Saudi Arabia',
-      '971': 'Dubai, UAE',      '972': 'Tel Aviv, Israel',
-      '974': 'Doha, Qatar',
-    };
+  // --- US AREA CODES (Prefix '1' + 3-digit code) ---
+  // Alabama
+  '1205': 'Alabama, United States', '1251': 'Alabama, United States', '1256': 'Alabama, United States', '1334': 'Alabama, United States',
+  // Alaska
+  '1907': 'Alaska, United States',
+  // Arizona
+  '1480': 'Arizona, United States', '1520': 'Arizona, United States', '1602': 'Arizona, United States', '1623': 'Arizona, United States', '1928': 'Arizona, United States',
+  // Arkansas
+  '1479': 'Arkansas, United States', '1501': 'Arkansas, United States', '1870': 'Arkansas, United States',
+  // California
+  '1209': 'California, United States', '1213': 'California, United States', '1310': 'California, United States', '1323': 'California, United States', '1408': 'California, United States', '1415': 'California, United States', '1510': 'California, United States', '1530': 'California, United States', '1559': 'California, United States', '1562': 'California, United States', '1619': 'California, United States', '1626': 'California, United States', '1650': 'California, United States', '1661': 'California, United States', '1707': 'California, United States', '1714': 'California, United States', '1760': 'California, United States', '1805': 'California, United States', '1818': 'California, United States', '1831': 'California, United States', '1858': 'California, United States', '1909': 'California, United States', '1916': 'California, United States', '1925': 'California, United States', '1949': 'California, United States', '1951': 'California, United States',
+  // Colorado
+  '1303': 'Colorado, United States', '1719': 'Colorado, United States', '1970': 'Colorado, United States',
+  // Connecticut
+  '1203': 'Connecticut, United States', '1860': 'Connecticut, United States',
+  // Delaware
+  '1302': 'Delaware, United States',
+  // District of Columbia
+  '1202': 'Washington , United States',
+  // Florida
+  '1239': 'Florida, United States', '1305': 'Florida, United States', '1321': 'Florida, United States', '1352': 'Florida, United States', '1386': 'Florida, United States', '1407': 'Florida, United States', '1561': 'Florida, United States', '1727': 'Florida, United States', '1772': 'Florida, United States', '1813': 'Florida, United States', '1850': 'Florida, United States', '1863': 'Florida, United States', '1904': 'Florida, United States', '1941': 'Florida, United States', '1954': 'Florida, United States',
+  // Georgia
+  '1229': 'Georgia, United States', '1404': 'Georgia, United States', '1478': 'Georgia, United States', '1706': 'Georgia, United States', '1770': 'Georgia, United States', '1912': 'Georgia, United States',
+  // Hawaii
+  '1808': 'Hawaii, United States',
+  // Idaho
+  '1208': 'Idaho, United States',
+  // Illinois
+  '1217': 'Illinois, United States', '1309': 'Illinois, United States', '1312': 'Illinois, United States', '1618': 'Illinois, United States', '1630': 'Illinois, United States', '1708': 'Illinois, United States', '1773': 'Illinois, United States', '1815': 'Illinois, United States', '1847': 'Illinois, United States',
+  // Indiana
+  '1219': 'Indiana, United States', '1260': 'Indiana, United States', '1317': 'Indiana, United States', '1574': 'Indiana, United States', '1765': 'Indiana, United States', '1812': 'Indiana, United States',
+  // Iowa
+  '1319': 'Iowa, United States', '1515': 'Iowa, United States', '1563': 'Iowa, United States', '1641': 'Iowa, United States', '1712': 'Iowa, United States',
+  // Kansas
+  '1316': 'Kansas, United States', '1620': 'Kansas, United States', '1785': 'Kansas, United States', '1913': 'Kansas, United States',
+  // Kentucky
+  '1270': 'Kentucky, United States', '1502': 'Kentucky, United States', '1606': 'Kentucky, United States', '1859': 'Kentucky, United States',
+  // Louisiana
+  '1225': 'Louisiana, United States', '1318': 'Louisiana, United States', '1337': 'Louisiana, United States', '1504': 'Louisiana, United States', '1985': 'Louisiana, United States',
+  // Maine
+  '1207': 'Maine, United States',
+  // Maryland
+  '1301': 'Maryland, United States', '1410': 'Maryland, United States',
+  // Massachusetts
+  '1413': 'Massachusetts, United States', '1508': 'Massachusetts, United States', '1617': 'Massachusetts, United States', '1781': 'Massachusetts, United States', '1978': 'Massachusetts, United States',
+  // Michigan
+  '1231': 'Michigan, United States', '1248': 'Michigan, United States', '1269': 'Michigan, United Michigan', '1313': 'Michigan, United States', '1517': 'Michigan, United States', '1586': 'Michigan, United States', '1616': 'Michigan, United States', '1734': 'Michigan, United States', '1810': 'Michigan, United States', '1906': 'Michigan, United States', '1989': 'Michigan, United States',
+  // Minnesota
+  '1218': 'Minnesota, United States', '1320': 'Minnesota, United States', '1507': 'Minnesota, United States', '1612': 'Minnesota, United States', '1651': 'Minnesota, United States', '1763': 'Minnesota, United States', '1952': 'Minnesota, United States',
+  // Mississippi
+  '1228': 'Mississippi, United States', '1601': 'Mississippi, United States', '1662': 'Mississippi, United States',
+  // Missouri
+  '1314': 'Missouri, United States', '1417': 'Missouri, United States', '1573': 'Missouri, United States', '1636': 'Missouri, United States', '1660': 'Missouri, United States', '1816': 'Missouri, United States',
+  // Montana
+  '1406': 'Montana, United States',
+  // Nebraska
+  '1308': 'Nebraska, United States', '1402': 'Nebraska, United States',
+  // Nevada
+  '1702': 'Nevada, United States', '1775': 'Nevada, United States',
+  // New Hampshire
+  '1603': 'New Hampshire, United States',
+  // New Jersey
+  '1201': 'New Jersey, United States', '1609': 'New Jersey, United States', '1732': 'New Jersey, United States', '1856': 'New Jersey, United States', '1908': 'New Jersey, United States', '1973': 'New Jersey, United States',
+  // New Mexico
+  '1505': 'New Mexico, United States', '1575': 'New Mexico, United States',
+  // New York
+  '1212': 'New York, United States', '1315': 'New York, United States', '1516': 'New York, United States', '1518': 'New York, United States', '1585': 'New York, United States', '1607': 'New York, United States', '1631': 'New York, United States', '1716': 'New York, United States', '1718': 'New York, United States', '1845': 'New York, United States', '1914': 'New York, United States', '1917': 'New York, United States',
+  // North Carolina
+  '1252': 'North Carolina, United States', '1336': 'North Carolina, United States', '1704': 'North Carolina, United States', '1828': 'North Carolina, United States', '1910': 'North Carolina, United States', '1919': 'North Carolina, United States',
+  // North Dakota
+  '1701': 'North Dakota, United States',
+  // Ohio
+  '1216': 'Ohio, United States', '1330': 'Ohio, United States', '1419': 'Ohio, United States', '1440': 'Ohio, United States', '1513': 'Ohio, United States', '1614': 'Ohio, United States', '1740': 'Ohio, United States', '1937': 'Ohio, United States',
+  // Oklahoma
+  '1405': 'Oklahoma, United States', '1580': 'Oklahoma, United States', '1918': 'Oklahoma, United States',
+  // Oregon
+  '1503': 'Oregon, United States', '1541': 'Oregon, United States',
+  // Pennsylvania
+  '1215': 'Pennsylvania, United States', '1412': 'Pennsylvania, United States', '1570': 'Pennsylvania, United States', '1610': 'Pennsylvania, United States', '1717': 'Pennsylvania, United States', '1724': 'Pennsylvania, United States', '1814': 'Pennsylvania, United States',
+  // Rhode Island
+  '1401': 'Rhode Island, United States',
+  // South Carolina
+  '1803': 'South Carolina, United States', '1843': 'South Carolina, United States', '1864': 'South Carolina, United States',
+  // South Dakota
+  '1605': 'South Dakota, United States',
+  // Tennessee
+  '1423': 'Tennessee, United States', '1615': 'Tennessee, United States', '1731': 'Tennessee, United States', '1865': 'Tennessee, United States', '1901': 'Tennessee, United States', '1931': 'Tennessee, United States',
+  // Texas
+  '1210': 'Texas, United States', '1214': 'Texas, United States', '1254': 'Texas, United States', '1281': 'Texas, United States', '1325': 'Texas, United States', '1361': 'Texas, United States', '1409': 'Texas, United States', '1432': 'Texas, United States', '1512': 'Texas, United States', '1713': 'Texas, United States', '1806': 'Texas, United States', '1817': 'Texas, United States', '1830': 'Texas, United States', '1903': 'Texas, United States', '1915': 'Texas, United States', '1936': 'Texas, United States', '1940': 'Texas, United States', '1956': 'Texas, United States', '1972': 'Texas, United States', '1979': 'Texas, United States',
+  // Utah
+  '1435': 'Utah, United States', '1801': 'Utah, United States',
+  // Vermont
+  '1802': 'Vermont, United States',
+  // Virginia
+  '1276': 'Virginia, United States', '1434': 'Virginia, United States', '1540': 'Virginia, United States', '1703': 'Virginia, United States', '1757': 'Virginia, United States', '1804': 'Virginia, United States',
+  // Washington
+  '1206': 'Washington, United States', '1253': 'Washington, United States', '1360': 'Washington, United States', '1425': 'Washington, United States', '1509': 'Washington, United States',
+  // West Virginia
+  '1304': 'West Virginia, United States',
+  // Wisconsin
+  '1262': 'Wisconsin, United States', '1414': 'Wisconsin, United States', '1608': 'Wisconsin, United States', '1715': 'Wisconsin, United States', '1920': 'Wisconsin, United States',
+  // Wyoming
+  '1307': 'Wyoming, United States',
+
+  // --- INTERNATIONAL CODES (Original Data) ---
+  '7': 'Moscow, Russia', '20': 'Cairo, Egypt', '27': 'Johannesburg, South Africa',
+  '30': 'Athens, Greece', '31': 'Amsterdam, Netherlands', '32': 'Brussels, Belgium',
+  '33': 'Paris, France', '34': 'Madrid, Spain', '36': 'Budapest, Hungary',
+  '39': 'Rome, Italy', '40': 'Bucharest, Romania', '41': 'Bern, Switzerland',
+  '43': 'Vienna, Austria', '44': 'London, United Kingdom', '45': 'Copenhagen, Denmark',
+  '46': 'Stockholm, Sweden', '47': 'Oslo, Norway', '48': 'Warsaw, Poland',
+  '49': 'Berlin, Germany', '51': 'Lima, Peru', '52': 'Mexico City, Mexico',
+  '53': 'Havana, Cuba', '54': 'Buenos Aires, Argentina', '55': 'Brasilia, Brazil',
+  '56': 'Santiago, Chile', '57': 'Bogota, Colombia', '58': 'Caracas, Venezuela',
+  '60': 'Kuala Lumpur, Malaysia', '61': 'Sydney, Australia', '62': 'Jakarta, Indonesia',
+  '63': 'Manila, Philippines', '64': 'Wellington, New Zealand', '65': 'Singapore',
+  '66': 'Bangkok, Thailand', '81': 'Tokyo, Japan', '82': 'Seoul, South Korea',
+  '84': 'Hanoi, Vietnam', '86': 'Beijing, China', '90': 'Ankara, Turkey',
+  '91': 'New Delhi, India', '92': 'Islamabad, Pakistan', '93': 'Kabul, Afghanistan',
+  '94': 'Colombo, Sri Lanka', '95': 'Naypyidaw, Myanmar', '234': 'Abuja, Nigeria',
+  '254': 'Nairobi, Kenya', '880': 'Dhaka, Bangladesh', '966': 'Riyadh, Saudi Arabia',
+  '971': 'Dubai, UAE', '972': 'Tel Aviv, Israel', '974': 'Doha, Qatar'
+};
 
     let query = '';
     // Strip leading +
     const digits = cleaned.startsWith('+') ? cleaned.slice(1) : cleaned;
 
-    // Try 3-digit, 2-digit, 1-digit prefix
-    for (const len of [3, 2, 1]) {
-      const prefix = digits.slice(0, len);
-      if (dialMap[prefix]) {
-        query = dialMap[prefix];
-        break;
-      }
-    }
+    // Try 4-digit, 3-digit, 2-digit, 1-digit prefix
+    for (const len of [4, 3, 2, 1]) { 
+  const prefix = digits.slice(0, len);
+  if (dialMap[prefix]) {
+    query = dialMap[prefix];
+    break;
+  }
+}
 
-    if (!query) query = 'Kuala Lumpur, Malaysia'; // sensible default
+    if (!query) query = 'Washington , United States'; // sensible default
 
     const apiKey = process.env.REACT_APP_OPENCAGE_API_KEY || '';
     const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${apiKey}&limit=1&no_annotations=1`;
@@ -496,8 +591,8 @@ const fetchPhoneNumberLocation = async (
     const result = data.results[0];
     const components = result.components;
 
-    // Add small random jitter (~5–10 km) to simulate tower triangulation
-    const jitter = () => (Math.random() - 0.5) * 0.16;
+    // Add random jitter (~3–10 km) to simulate tower triangulation
+const jitter = () => (Math.random() * 0.063 + 0.027) * (Math.random() < 0.5 ? -1 : 1);
 
     return {
       lat: result.geometry.lat + jitter(),
