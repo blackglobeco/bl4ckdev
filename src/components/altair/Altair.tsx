@@ -433,6 +433,55 @@ const phoneLocationDeclaration: FunctionDeclaration = {
   }
 };
 
+// AHMIA DARK WEB SEARCH 
+
+const ahmiaSearchDeclaration: FunctionDeclaration = {
+  name: "search_ahmia",
+  description: "Search Ahmia dark web search engine to find information, .onion sites, and Tor hidden services. Use this when the user asks to search the dark web, search Ahmia, find onion sites, or look up something on Tor.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      query: {
+        type: Type.STRING,
+        description: "The search query to look up on Ahmia dark web search engine"
+      }
+    },
+    required: ["query"]
+  }
+};
+
+const fetchAhmiaResults = async (query: string): Promise<string> => {
+  try {
+    // Use the Vercel serverless proxy to avoid CORS issues
+    const response = await fetch(`/api/ahmia?q=${encodeURIComponent(query)}`);
+
+    if (!response.ok) {
+      return `Ahmia search failed with status ${response.status}. The proxy may be unavailable.`;
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      return `Ahmia search error: ${data.error}`;
+    }
+
+    const results = data.results as { title: string; url: string; description: string }[];
+
+    if (!results || results.length === 0) {
+      return `No results found on Ahmia for "${query}". Try a different search term.`;
+    }
+
+    const formatted = results.map((r, i) =>
+      `Result ${i + 1}:\nTitle: ${r.title || '(no title)'}\nURL: ${r.url}${r.description ? `\nDescription: ${r.description}` : ''}`
+    ).join('\n\n');
+
+    return `Ahmia dark web search results for "${query}":\n\n${formatted}`;
+  } catch (err: any) {
+    return `Error searching Ahmia: ${err.message}`;
+  }
+};
+
+
 // Helper: resolve phone number country/region using OpenCage API
 const fetchPhoneNumberLocation = async (
   phoneNumber: string
@@ -799,6 +848,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [phoneLocationDeclaration] }, // Added Phone Number Location tool declaration
         { functionDeclarations: [ipLocationDeclaration] }, // Added IP Location lookup tool declaration
         { functionDeclarations: [getLatestNewsDeclaration] }, // Added real-time news fetching tool
+	{ functionDeclarations: [ahmiaSearchDeclaration] }, // Ahmia dark web search
       ],
     });
   }, [setConfig, setModel, location, locationError]);
@@ -1079,8 +1129,12 @@ In order to ask Black AI a question, the user must give the prompt in the conver
       });
 
       // Handle news fetching asynchronously before sending tool response
-      const newsCalls = toolCall.functionCalls.filter(fc => fc.name === getLatestNewsDeclaration.name);
-      const otherCalls = toolCall.functionCalls.filter(fc => fc.name !== getLatestNewsDeclaration.name);
+      const newsCalls  = toolCall.functionCalls.filter(fc => fc.name === getLatestNewsDeclaration.name);
+      const ahmiaCalls = toolCall.functionCalls.filter(fc => fc.name === ahmiaSearchDeclaration.name);
+      const otherCalls = toolCall.functionCalls.filter(fc =>
+        fc.name !== getLatestNewsDeclaration.name &&
+        fc.name !== ahmiaSearchDeclaration.name
+      );
 
       // Fetch news for all news calls, then send combined tool response
       if (newsCalls.length > 0) {
@@ -1099,6 +1153,24 @@ In order to ask Black AI a question, the user must give the prompt in the conver
           client.sendToolResponse({ functionResponses: newsResponses });
         });
       }
+
+	// ── Handle Ahmia search — fetch results and feed them back to the AI ──
+      if (ahmiaCalls.length > 0) {
+        Promise.all(ahmiaCalls.map(async (fc) => {
+          const query = (fc.args as any).query as string;
+          console.log(`[BlackAI] Searching Ahmia for: "${query}"`);
+          const results = await fetchAhmiaResults(query);
+          console.log("[BlackAI] Ahmia results fetched");
+          return {
+            response: { output: { success: true, results } },
+            id: fc.id,
+            name: fc.name,
+          };
+        })).then((ahmiaResponses) => {
+          client.sendToolResponse({ functionResponses: ahmiaResponses });
+        });
+      }
+      // ───────────────────────────────────────────────────────────────────────
 
       if (otherCalls.length) {
         setTimeout(
