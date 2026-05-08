@@ -452,23 +452,28 @@ const ahmiaSearchDeclaration: FunctionDeclaration = {
 
 const fetchAhmiaResults = async (query: string): Promise<string> => {
   try {
-    // Use the Vercel serverless proxy to avoid CORS issues
+    console.log(`[Ahmia] Searching for: "${query}"`);
+
     const response = await fetch(`/api/ahmia?q=${encodeURIComponent(query)}`);
+    console.log(`[Ahmia] Proxy response status: ${response.status}`);
 
     if (!response.ok) {
-      return `Ahmia search failed with status ${response.status}. The proxy may be unavailable.`;
+      const errText = await response.text();
+      console.error(`[Ahmia] Proxy error:`, errText);
+      return `Ahmia search failed (status ${response.status}). Make sure the api/ahmia.ts file exists in your project root and has been deployed to Vercel.`;
     }
 
     const data = await response.json();
+    console.log(`[Ahmia] Got ${data.results?.length ?? 0} results`);
 
     if (data.error) {
-      return `Ahmia search error: ${data.error}`;
+      return `Ahmia error: ${data.error}`;
     }
 
     const results = data.results as { title: string; url: string; description: string }[];
 
     if (!results || results.length === 0) {
-      return `No results found on Ahmia for "${query}". Try a different search term.`;
+      return `No results found on Ahmia for "${query}". Try different keywords.`;
     }
 
     const formatted = results.map((r, i) =>
@@ -477,10 +482,10 @@ const fetchAhmiaResults = async (query: string): Promise<string> => {
 
     return `Ahmia dark web search results for "${query}":\n\n${formatted}`;
   } catch (err: any) {
+    console.error(`[Ahmia] Fetch error:`, err);
     return `Error searching Ahmia: ${err.message}`;
   }
 };
-
 
 // Helper: resolve phone number country/region using OpenCage API
 const fetchPhoneNumberLocation = async (
