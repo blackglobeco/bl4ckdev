@@ -89,30 +89,43 @@ module.exports = async (req, res) => {
 
     const results = [];
 
-    const mainStart = html.indexOf('id="ahmiaMainContent"');
-    const searchArea = mainStart !== -1 ? html.substring(mainStart) : html;
+    // Find the <ol class="searchResults"> block
+    const olStart = html.indexOf('<ol class="searchResults">');
+    const resultArea = olStart !== -1 ? html.substring(olStart) : html;
 
-    const resultsStart = searchArea.indexOf('<ul>');
-    const resultArea = resultsStart !== -1 ? searchArea.substring(resultsStart) : searchArea;
-
-    const liRegex = /<li>([\s\S]*?)<\/li>/g;
+    // Match each <li class="result">...</li>
+    const liRegex = /<li class="result">([\s\S]*?)<\/li>/g;
     let match;
 
     while ((match = liRegex.exec(resultArea)) !== null && results.length < 8) {
       const block = match[1];
 
-      const h4Match = /<h4[^>]*>\s*<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
-      if (!h4Match) continue;
+      // Extract href — contains redirect_url param with the real onion URL
+      const hrefMatch = /href="([^"]+redirect_url=[^"]+)"/.exec(block);
+      if (!hrefMatch) continue;
 
-      const url = h4Match[1].trim();
-      const title = h4Match[2].replace(/<[^>]+>/g, '').trim();
+      // Parse the redirect_url query param to get the real onion address
+      let url = '';
+      try {
+        const redirectParam = hrefMatch[1].match(/redirect_url=([^&"]+)/);
+        url = redirectParam ? decodeURIComponent(redirectParam[1]) : hrefMatch[1];
+      } catch {
+        url = hrefMatch[1];
+      }
 
-      if (url.startsWith('/') || url.includes('ahmia.fi')) continue;
+      // Extract title text from inside the <a> tag
+      const titleMatch = /<a[^>]+>([\s\S]*?)<\/a>/i.exec(block);
+      const title = titleMatch
+        ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+        : '(no title)';
 
+      // Extract description from <p> tag
       const descMatch = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);
       const description = descMatch
-        ? descMatch[1].replace(/<[^>]+>/g, '').trim()
+        ? descMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
         : 'No description available';
+
+      if (!url) continue;
 
       results.push({ title, description, url });
     }
