@@ -1,7 +1,6 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import https from 'https';
+const https = require('https');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
 
@@ -10,18 +9,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const q = req.query?.q as string;
+  const q = req.query?.q;
   if (!q) {
     res.status(400).json({ error: 'Missing query parameter q' });
     return;
   }
 
-  const fetchUrl = (
-    hostname: string,
-    path: string,
-    cookieHeader = '',
-    redirectCount = 0
-  ): Promise<{ html: string; statusCode: number; cookies: string }> => {
+  const fetchUrl = (hostname, path, cookieHeader = '', redirectCount = 0) => {
     return new Promise((resolve, reject) => {
       if (redirectCount > 5) { reject(new Error('Too many redirects')); return; }
       const options = {
@@ -40,10 +34,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const request = https.get(options, (response) => {
         const { statusCode, headers } = response;
 
-        const setCookies = (headers['set-cookie'] || []) as string[];
-        const cookies = setCookies.map((c: string) => c.split(';')[0]).join('; ');
+        // Collect Set-Cookie headers
+        const setCookies = headers['set-cookie'] || [];
+        const cookies = setCookies.map(c => c.split(';')[0]).join('; ');
 
-        if ([301, 302, 303, 307, 308].includes(statusCode ?? 0)) {
+        if ([301, 302, 303, 307, 308].includes(statusCode)) {
           const location = headers.location;
           if (!location) { reject(new Error('Redirect with no location')); return; }
           response.resume();
@@ -59,8 +54,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         let body = '';
-        response.on('data', (chunk: Buffer) => { body += chunk.toString(); });
-        response.on('end', () => resolve({ html: body, statusCode: statusCode ?? 200, cookies }));
+        response.on('data', (chunk) => { body += chunk; });
+        response.on('end', () => resolve({ html: body, statusCode, cookies }));
         response.on('error', reject);
       });
       request.on('error', reject);
@@ -69,9 +64,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
+    // Step 1: Load homepage to get CSRF token + cookies
     console.log('[Ahmia] Fetching homepage for CSRF token...');
-    const { html: homeHtml, cookies: homeCookies } = await fetchUrl('ahmia.fi', '/');
+    const { html: homeHtml, cookies: homeCookies } = await fetchUrl('ahmia.fi', '/') as any;
 
+    // Extract CSRF token: <input type="hidden" name="XXXXX" value="YYYYY">
     const csrfMatch = /<input[^>]+type="hidden"[^>]+name="([^"]+)"[^>]+value="([^"]+)"/.exec(homeHtml)
       || /<input[^>]+type="hidden"[^>]+value="([^"]+)"[^>]+name="([^"]+)"/.exec(homeHtml);
 
@@ -86,23 +83,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.warn('[Ahmia] No CSRF token found, proceeding without it');
     }
 
+    // Step 2: Fetch search results with cookie + token
     console.log(`[Ahmia] Fetching search results: ${searchPath}`);
-    const { html, statusCode } = await fetchUrl('ahmia.fi', searchPath, homeCookies);
+    const { html, statusCode } = await fetchUrl('ahmia.fi', searchPath, homeCookies) as any;
 
-    const results: { title: string; description: string; url: string }[] = [];
+    const results = [];
 
+    // Find the <ol class="searchResults"> block
     const olStart = html.indexOf('<ol class="searchResults">');
     const resultArea = olStart !== -1 ? html.substring(olStart) : html;
 
+    // Match each <li class="result">...</li>
     const liRegex = /<li class="result">([\s\S]*?)<\/li>/g;
     let match;
 
     while ((match = liRegex.exec(resultArea)) !== null && results.length < 8) {
       const block = match[1];
 
+      // Extract href — contains redirect_url param with the real onion URL
       const hrefMatch = /href="([^"]+redirect_url=[^"]+)"/.exec(block);
       if (!hrefMatch) continue;
 
+      // Parse the redirect_url query param to get the real onion address
       let url = '';
       try {
         const redirectParam = hrefMatch[1].match(/redirect_url=([^&"]+)/);
@@ -111,11 +113,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         url = hrefMatch[1];
       }
 
+      // Extract title text from inside the <a> tag
       const titleMatch = /<a[^>]+>([\s\S]*?)<\/a>/i.exec(block);
       const title = titleMatch
         ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
         : '(no title)';
 
+      // Extract description from <p> tag
       const descMatch = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);
       const description = descMatch
         ? descMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
@@ -133,9 +137,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       debug_status: statusCode,
     });
 
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[Ahmia] Error:', message);
-    res.status(500).json({ error: message });
+  } catch (err) {
+    console.error('[Ahmia] Error:', err.message);
+    res.status(500).json({ error: err.message });
   }
-}
+};

@@ -1,8 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import https from 'https';
-import http from 'http';
+const https = require('https');
+const http = require('http');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async (req: any, res: any) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
 
@@ -11,21 +10,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const onionUrl = req.query?.url as string;
+  const onionUrl: string = req.query?.url;
   if (!onionUrl) {
     res.status(400).json({ error: 'Missing query parameter: url' });
     return;
   }
 
+  // Validate it looks like an onion URL
   const onionMatch = onionUrl.match(/([a-z2-7]{16,56}\.onion)(\/[^\s]*)?/i);
   if (!onionMatch) {
     res.status(400).json({ error: 'Invalid or missing .onion URL' });
     return;
   }
 
-  const onionHost = onionMatch[1];
-  const onionPath = onionMatch[2] || '/';
+  const onionHost = onionMatch[1];                        // e.g. abc123.onion
+  const onionPath = onionMatch[2] || '/';                  // e.g. /some/path
 
+  // ── Tor2Web gateway list (tried in order, first success wins) ──────────────
+  // These are public gateways that proxy .onion → clearnet.
+  // Some may be down; the fallback chain handles that.
   const gateways = [
     `https://${onionHost}.tor2web.io${onionPath}`,
     `https://${onionHost}.onion.ws${onionPath}`,
@@ -35,6 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `https://${onionHost}.s1.tor-gateways.de${onionPath}`,
   ];
 
+  // ── Simple fetch helper ────────────────────────────────────────────────────
   const fetchViaGateway = (gatewayUrl: string): Promise<{ html: string; status: number; gateway: string }> => {
     return new Promise((resolve, reject) => {
       const parsed = new URL(gatewayUrl);
@@ -54,26 +58,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
       };
 
-      const request = lib.request(options, (response) => {
-        if ([301, 302, 303, 307, 308].includes(response.statusCode ?? 0) && response.headers.location) {
+      const request = lib.request(options, (response: any) => {
+        // Follow single redirect
+        if ([301, 302, 303, 307, 308].includes(response.statusCode) && response.headers.location) {
           response.resume();
-          const location = response.headers.location as string;
-          const redirectUrl = location.startsWith('http')
-            ? location
-            : `${parsed.protocol}//${parsed.hostname}${location}`;
-          fetchViaGateway(redirectUrl).then(resolve).catch(reject);
+          const location: string = response.headers.location;
+          const redirectUrl = location.startsWith('http') ? location : `${parsed.protocol}//${parsed.hostname}${location}`;
+          fetchViaGateway(redirectUrl)
+            .then(resolve)
+            .catch(reject);
           return;
         }
 
         let body = '';
         response.on('data', (chunk: Buffer) => {
           body += chunk.toString();
+          // Bail early if page is huge (>500 KB) to stay within Vercel limits
           if (body.length > 512_000) {
             request.destroy();
-            resolve({ html: body.slice(0, 512_000), status: response.statusCode ?? 200, gateway: gatewayUrl });
+            resolve({ html: body.slice(0, 512_000), status: response.statusCode, gateway: gatewayUrl });
           }
         });
-        response.on('end', () => resolve({ html: body, status: response.statusCode ?? 200, gateway: gatewayUrl }));
+        response.on('end', () => resolve({ html: body, status: response.statusCode, gateway: gatewayUrl }));
         response.on('error', reject);
       });
 
@@ -83,31 +89,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   };
 
+  // ── Text extraction: strip HTML tags, collapse whitespace ─────────────────
   const extractText = (html: string): string => {
+    // Remove <script>, <style>, <noscript> blocks entirely
     let text = html
       .replace(/<script[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?<\/style>/gi, '')
       .replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
 
+    // Replace block elements with newlines for readability
     text = text.replace(/<\/(p|div|li|tr|h[1-6]|br|section|article|header|footer)>/gi, '\n');
+
+    // Strip remaining tags
     text = text.replace(/<[^>]+>/g, ' ');
+
+    // Decode common HTML entities
     text = text
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
       .replace(/&[a-z]+;/gi, ' ');
 
-    return text
+    // Collapse whitespace / blank lines
+    text = text
       .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
       .join('\n');
+
+    return text;
   };
 
+  // ── Extract page title ─────────────────────────────────────────────────────
   const extractTitle = (html: string): string => {
     const match = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
     return match ? match[1].replace(/<[^>]+>/g, '').trim() : '(no title)';
   };
 
+  // ── Extract all visible links ──────────────────────────────────────────────
   const extractLinks = (html: string): { text: string; href: string }[] => {
     const links: { text: string; href: string }[] = [];
     const linkRegex = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
@@ -122,6 +144,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return links;
   };
 
+  // ── Try each gateway in sequence ──────────────────────────────────────────
   let lastError = '';
   for (const gateway of gateways) {
     try {
@@ -134,9 +157,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         continue;
       }
 
-      const title  = extractTitle(html);
-      const text   = extractText(html);
-      const links  = extractLinks(html);
+      const title   = extractTitle(html);
+      const text    = extractText(html);
+      const links   = extractLinks(html);
+
+      // Truncate text to ~8 000 chars so the AI response stays manageable
       const truncated = text.length > 8_000
         ? text.slice(0, 8_000) + '\n\n[... content truncated ...]'
         : text;
@@ -144,25 +169,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log(`[CrawlOnion] Success via ${usedGateway} — ${text.length} chars extracted`);
 
       res.status(200).json({
-        success: true,
-        url: onionUrl,
-        gateway: usedGateway,
+        success:  true,
+        url:      onionUrl,
+        gateway:  usedGateway,
         title,
-        text: truncated,
-        links: links.slice(0, 20),
+        text:     truncated,
+        links:    links.slice(0, 20),
         charCount: text.length,
       });
       return;
 
-    } catch (err: unknown) {
-      lastError = err instanceof Error ? err.message : String(err);
+    } catch (err: any) {
+      lastError = err.message;
       console.warn(`[CrawlOnion] Gateway failed: ${lastError}`);
+      // try next gateway
     }
   }
 
+  // All gateways failed
   res.status(502).json({
     success: false,
     error: `All Tor2Web gateways failed. Last error: ${lastError}`,
     url: onionUrl,
   });
-}
+};
