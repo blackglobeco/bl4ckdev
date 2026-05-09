@@ -477,13 +477,16 @@ const fetchAhmiaResults = async (query: string): Promise<string> => {
     }
 
     const formatted = results.map((r, i) =>
-      `Result ${i + 1}:\nTitle: ${r.title || '(no title)'}\nURL: ${r.url}${r.description ? `\nDescription: ${r.description}` : ''}`
-    ).join('\n\n');
+  `Result ${i + 1}:
+- Title: ${r.title || '(no title)'}
+- Description: ${r.description || 'No description available'}
+- Onion Address: ${r.url}`
+).join('\n\n');
 
-    return `Ahmia dark web search results for "${query}":\n\n${formatted}`;
+return `The dark web search results for "${query}". Here are the findings, summarize each result by its title and description only, do not read out the onion URLs:\n\n${formatted}`;
   } catch (err: any) {
     console.error(`[Ahmia] Fetch error:`, err);
-    return `Error searching Ahmia: ${err.message}`;
+    return `Error searching dark web: ${err.message}`;
   }
 };
 
