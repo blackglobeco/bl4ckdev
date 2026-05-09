@@ -437,13 +437,13 @@ const phoneLocationDeclaration: FunctionDeclaration = {
 
 const ahmiaSearchDeclaration: FunctionDeclaration = {
   name: "search_ahmia",
-  description: "Search Ahmia dark web search engine to find information, .onion sites, and Tor hidden services. Use this when the user asks to search the dark web, search Ahmia, find onion sites, or look up something on Tor.",
+  description: "Search dark web search engine to find information, .onion sites, and Tor hidden services. Use this when the user asks to search the dark web, search Ahmia, find onion sites, or look up something on Tor.",
   parameters: {
     type: Type.OBJECT,
     properties: {
       query: {
         type: Type.STRING,
-        description: "The search query to look up on Ahmia dark web search engine"
+        description: "The search query to look up on dark web search engine"
       }
     },
     required: ["query"]
@@ -460,7 +460,7 @@ const fetchAhmiaResults = async (query: string): Promise<string> => {
     if (!response.ok) {
       const errText = await response.text();
       console.error(`[Ahmia] Proxy error:`, errText);
-      return `Ahmia search failed (status ${response.status}). Make sure the api/ahmia.ts file exists in your project root and has been deployed to Vercel.`;
+      return `Dark web search failed (status ${response.status}). Make sure the api/ahmia.ts file exists in your project root and has been deployed to Vercel.`;
     }
 
     const data = await response.json();
@@ -473,7 +473,7 @@ const fetchAhmiaResults = async (query: string): Promise<string> => {
     const results = data.results as { title: string; url: string; description: string }[];
 
     if (!results || results.length === 0) {
-      return `No results found on Ahmia for "${query}". Try different keywords.`;
+      return `No results found on dark web for "${query}". Try different keywords.`;
     }
 
     const formatted = results.map((r, i) =>
