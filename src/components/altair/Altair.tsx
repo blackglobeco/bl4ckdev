@@ -437,7 +437,7 @@ const phoneLocationDeclaration: FunctionDeclaration = {
 
 const ahmiaSearchDeclaration: FunctionDeclaration = {
   name: "search_ahmia",
-  description: "Search dark web search engine to find information, .onion sites, and Tor hidden services. Use this when the user asks to search the dark web, search Ahmia, find onion sites, or look up something on Tor.",
+  description: "Search dark web search engine to find information, .onion sites, and Tor hidden services. Use this when the user asks to search the dark web, find onion sites, or look up something on Tor.",
   parameters: {
     type: Type.OBJECT,
     properties: {
