@@ -450,6 +450,18 @@ const ahmiaSearchDeclaration: FunctionDeclaration = {
   }
 };
 
+const crawlOnionDeclaration: FunctionDeclaration = {
+  name: "crawl_onion_page",
+  description: "Crawl and extract the full text content of a dark web .onion page. Use this when the user asks to open, read, visit, crawl, or get the content/information from a specific .onion URL found in dark web search results.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      url: { type: Type.STRING, description: "The full .onion URL to crawl" }
+    },
+    required: ["url"]
+  }
+};
+
 const fetchAhmiaResults = async (query: string): Promise<string> => {
   try {
     console.log(`[Ahmia] Searching for: "${query}"`);
@@ -488,6 +500,19 @@ return `The dark web search results for "${query}". Here are the findings, summa
     console.error(`[Ahmia] Fetch error:`, err);
     return `Error searching dark web: ${err.message}`;
   }
+};
+
+const fetchOnionPage = async (onionUrl: string): Promise<string> => {
+  try {
+    const response = await fetch(`/api/crawl-onion?url=${encodeURIComponent(onionUrl)}`);
+    if (!response.ok) return `Failed to crawl (status ${response.status}). Site may be offline.`;
+    const data = await response.json();
+    if (!data.success) return `Could not reach page: ${data.error}`;
+    const linksSummary = data.links?.length
+      ? '\n\nLinks found:\n' + data.links.map((l: any, i: number) => `${i+1}. ${l.text} → ${l.href}`).join('\n')
+      : '';
+    return `Crawled: ${onionUrl}\nTitle: ${data.title}\nGateway: ${data.gateway}\n\n--- CONTENT ---\n${data.text}${linksSummary}`;
+  } catch (err: any) { return `Error: ${err.message}`; }
 };
 
 // Helper: resolve phone number country/region using OpenCage API
@@ -856,7 +881,8 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [phoneLocationDeclaration] }, // Added Phone Number Location tool declaration
         { functionDeclarations: [ipLocationDeclaration] }, // Added IP Location lookup tool declaration
         { functionDeclarations: [getLatestNewsDeclaration] }, // Added real-time news fetching tool
-	{ functionDeclarations: [ahmiaSearchDeclaration] }, // Ahmia dark web search
+	    { functionDeclarations: [ahmiaSearchDeclaration] }, // Ahmia dark web search
+		{ functionDeclarations: [crawlOnionDeclaration] },
       ],
     });
   }, [setConfig, setModel, location, locationError]);
@@ -1162,6 +1188,17 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         });
       }
 
+		const crawlCalls = toolCall.functionCalls.filter(fc => fc.name === crawlOnionDeclaration.name);
+
+	// Also add crawlOnionDeclaration.name to the otherCalls filter
+
+	if (crawlCalls.length > 0) {
+  	Promise.all(crawlCalls.map(async (fc) => {
+    const content = await fetchOnionPage((fc.args as any).url);
+    return { response: { output: { success: true, content } }, id: fc.id, name: fc.name };
+  	})).then(r => client.sendToolResponse({ functionResponses: r }));
+	}
+		
 	// ── Handle Ahmia search — fetch results and feed them back to the AI ──
       if (ahmiaCalls.length > 0) {
         Promise.all(ahmiaCalls.map(async (fc) => {
