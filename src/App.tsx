@@ -39,7 +39,6 @@ import { URLMaskerWidget } from "./components/url-masker-widget/URLMaskerWidget"
 import { WorldIPTVWidget } from "./components/world-iptv-widget/WorldIPTVWidget";
 import { PhishMakerWidget } from "./components/phish-maker-widget/PhishMakerWidget";
 import { DataBankWidget } from "./components/data-bank-widget/DataBankWidget";
-import { FlipperZeroWidget } from "./components/flipper-zero-widget/FlipperZeroWidget";
 import { VoiceClonerWidget } from "./components/voice-cloner-widget/VoiceClonerWidget";
 import { MS365HijackerWidget } from "./components/ms365-hijacker-widget/MS365HijackerWidget";
 import { FlightTrackerWidget } from "./components/flight-tracker-widget/FlightTrackerWidget";
@@ -107,8 +106,6 @@ function App() {
   const [showDataBankWidget, setShowDataBankWidget] = useState<boolean>(false);
   // Android Spyware widget state
   const [showAndroidSpywareWidget, setShowAndroidSpywareWidget] = useState<boolean>(false);
-  // Flipper Zero widget state
-  const [showFlipperZeroWidget, setShowFlipperZeroWidget] = useState<boolean>(false);
   // Voice Cloner widget state
   const [showVoiceClonerWidget, setShowVoiceClonerWidget] = useState<boolean>(false);
   // MS365 Hijacker widget state
@@ -146,7 +143,6 @@ function App() {
     setShowPhishMakerWidget(false);
     setShowDataBankWidget(false);
     setShowAndroidSpywareWidget(false);
-    setShowFlipperZeroWidget(false);
     setShowVoiceClonerWidget(false);
     setShowMS365HijackerWidget(false);
     setShowFlightTrackerWidget(false);
@@ -307,12 +303,6 @@ function App() {
                   closeAllWidgets();
                   setTimeout(() => {
                     setShowDataBankWidget(true);
-                  }, 100);
-                }}
-                onShowFlipperZero={() => {
-                  closeAllWidgets();
-                  setTimeout(() => {
-                    setShowFlipperZeroWidget(true);
                   }, 100);
                 }}
                 onShowVoiceCloner={() => {
@@ -487,12 +477,6 @@ function App() {
         {showAndroidSpywareWidget && (
           <AndroidSpywareWidget 
             onClose={closeAllWidgets} 
-          />
-        )}
-
-        {showFlipperZeroWidget && (
-          <FlipperZeroWidget
-            onClose={closeAllWidgets}
           />
         )}
 

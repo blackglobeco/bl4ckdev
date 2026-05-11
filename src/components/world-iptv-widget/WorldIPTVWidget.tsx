@@ -14,7 +14,7 @@ export const WorldIPTVWidget: React.FC<WorldIPTVWidgetProps> = ({ onClose }) => 
         <div className="world-iptv-content">
           <div className="world-iptv-container">
             <iframe
-              src="https://iptvnator.vercel.app/"
+              src="https://elliptoiptv.vercel.app/"
               className="world-iptv-iframe"
               title="World IPTV Player"
               allowFullScreen

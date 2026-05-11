@@ -38,7 +38,6 @@ interface AltairProps {
   onShowPhishMaker: () => void; // Added for Phish Maker widget
   onShowDataBank: () => void; // Added for Data Bank widget
   onShowAndroidSpyware: () => void; // Added for Android Spyware widget
-  onShowFlipperZero: () => void; // Added for Flipper Zero widget
   onShowVoiceCloner: () => void; // Added for Voice Cloner widget
   onShowMS365Hijacker: () => void; // Added for MS365 Hijacker widget
   onShowFlightTracker: () => void; // Added for Flight Tracker widget
@@ -324,17 +323,6 @@ const phishMakerDeclaration: FunctionDeclaration = {
 const androidSpywareDeclaration: FunctionDeclaration = {
   name: "show_android_spyware",
   description: "Display the Android Spyware widget when the user asks to track or monitor someone's android device.",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {},
-    required: []
-  }
-};
-
-// Flipper Zero widget declaration
-const flipperZeroDeclaration: FunctionDeclaration = {
-  name: "flipper_zero_control",
-  description: "Display the Flipper Zero widget when the user asks to access or control the Flipper Zero device.",
   parameters: {
     type: Type.OBJECT,
     properties: {},
@@ -777,7 +765,7 @@ const fetchLatestNews = async (topic: string, country?: string): Promise<string>
   }
 };
 
-function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowSocialActivityTracker, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowSubdomainFinder, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowFlipperZero, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
+function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowSocialActivityTracker, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowSubdomainFinder, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
   const [jsonString, setJSONString] = useState<string>("");
   const { client, setConfig, setModel } = useLiveAPIContext();
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -870,7 +858,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [phishMakerDeclaration] }, // Added Phish Maker tool declaration
         { functionDeclarations: [dataBankDeclaration] }, // Added Data Bank tool declaration
         { functionDeclarations: [androidSpywareDeclaration] }, // Added Android Spyware tool declaration
-        { functionDeclarations: [flipperZeroDeclaration] }, // Added Flipper Zero tool declaration
         { functionDeclarations: [voiceClonerDeclaration] }, // Added Voice Cloner tool declaration
         { functionDeclarations: [ms365HijackerDeclaration] }, // Added MS365 Hijacker tool declaration
         { functionDeclarations: [flightTrackerDeclaration] }, // Added Flight Tracker tool declaration
@@ -1110,9 +1097,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         } else if (name === androidSpywareDeclaration.name) {
           console.log(`Android Spyware widget requested`);
           onShowAndroidSpyware();
-        } else if (name === flipperZeroDeclaration.name) {
-          console.log(`Flipper Zero widget requested`);
-          onShowFlipperZero();
         } else if (name === voiceClonerDeclaration.name) {
           console.log(`Voice Cloner widget requested`);
           onShowVoiceCloner();
@@ -1269,8 +1253,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
                       ? `Data Bank widget opened. You can now access the private leaked databases.`
                       : fc.name === androidSpywareDeclaration.name // Response for Android Spyware widget
                       ? `Android Spyware widget opened. You can now track someone's Android device.`
-                      : fc.name === flipperZeroDeclaration.name // Response for Flipper Zero widget
-                      ? `Flipper Zero widget opened. You can now control your Flipper Zero device.`
                       : fc.name === voiceClonerDeclaration.name // Response for Voice Cloner widget
                       ? `Voice Cloner widget opened. You can now clone and manipulate any voice.`
                       : fc.name === ms365HijackerDeclaration.name // Response for MS365 Hijacker widget
@@ -1301,7 +1283,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
     return () => {
       client.off("toolcall", onToolCall);
     };
-  }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowSocialActivityTracker, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowSubdomainFinder, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowFlipperZero, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
+  }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowSocialActivityTracker, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowSubdomainFinder, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
 
   const embedRef = useRef<HTMLDivElement>(null);
 
