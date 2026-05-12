@@ -405,22 +405,6 @@ const bitchatTrackerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Shodan IP Lookup declaration
-const shodanIpLookupDeclaration: FunctionDeclaration = {
-  name: "shodan_ip_lookup",
-  description: "Look up open ports, vulnerabilities, hostnames, and other intelligence for any IP address using Shodan. Use this when the user asks to scan, check, lookup, or investigate an IP address.",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      ip_address: {
-        type: Type.STRING,
-        description: "The IP address to look up (e.g., '8.8.8.8', '1.1.1.1', '192.168.1.1')"
-      }
-    },
-    required: ["ip_address"]
-  }
-};
-
 // Phone Number Location declaration
 const phoneLocationDeclaration: FunctionDeclaration = {
   name: "show_phone_number_location",
@@ -693,65 +677,6 @@ const jitter = () => (Math.random() * 0.063 + 0.027) * (Math.random() < 0.5 ? -1
   }
 };
 
-// Helper: fetch Shodan data for an IP.
-// Tries InternetDB first (free, no key), falls back to official Shodan API.
-const fetchShodanIpData = async (ipAddress: string): Promise<string> => {
-  try {
-    // --- Attempt 1: InternetDB (free, no key) ---
-    const idbResponse = await fetch(`https://internetdb.shodan.io/${encodeURIComponent(ipAddress)}`);
-
-    if (idbResponse.ok) {
-      const data = await idbResponse.json();
-
-      const ip            = data.ip        || ipAddress;
-      const ports: number[]     = data.ports     || [];
-      const hostnames: string[] = data.hostnames || [];
-      const vulns: string[]     = data.vulns     || [];
-      const tags: string[]      = data.tags      || [];
-      const cpes: string[]      = data.cpes      || [];
-
-      let summary = `Shodan intelligence report for IP address ${ip}. `;
-      summary += ports.length > 0 ? `Open ports: ${ports.join(", ")}. ` : `No open ports detected. `;
-      if (hostnames.length > 0) summary += `Hostnames: ${hostnames.join(", ")}. `;
-      if (tags.length > 0)      summary += `Tags: ${tags.join(", ")}. `;
-      if (cpes.length > 0)      summary += `Software and hardware: ${cpes.join(", ")}. `;
-      summary += vulns.length > 0
-        ? `Known vulnerabilities: ${vulns.join(", ")}. Total of ${vulns.length} ${vulns.length === 1 ? "entry" : "entries"}.`
-        : `No known vulnerabilities listed.`;
-
-      return summary;
-    }
-
-   // --- Attempt 2: Free fallback using ip-api.com + hackertarget port scan ---
-const [ipApiRes, portRes] = await Promise.allSettled([
-  fetch(`http://ip-api.com/json/${encodeURIComponent(ipAddress)}?fields=status,message,country,regionName,city,isp,org,as,query`),
-  fetch(`https://api.hackertarget.com/nmap/?q=${encodeURIComponent(ipAddress)}`)
-]);
-
-let summary = `Intelligence report for IP address ${ipAddress}. `;
-
-// ip-api.com — geolocation + org info
-if (ipApiRes.status === 'fulfilled' && ipApiRes.value.ok) {
-  const geo = await ipApiRes.value.json();
-  if (geo.status === 'success') {
-    summary += `Organization: ${geo.org || geo.isp || 'Unknown'}. `;
-    summary += `Location: ${geo.city || 'Unknown'}, ${geo.regionName || ''}, ${geo.country || 'Unknown'}. `;
-    if (geo.as) summary += `AS number: ${geo.as}. `;
-  }
-}
-
-// hackertarget.com — free nmap port scan
-if (portRes.status === 'fulfilled' && portRes.value.ok) {
-  const portText = await portRes.value.text();
-  if (portText && !portText.startsWith('error') && !portText.includes('API count exceeded')) {
-    summary += `Port scan results: ${portText.trim().replace(/\n/g, '; ')}. `;
-  } else {
-    summary += `Port scan unavailable at this time. `;
-  }
-}
-
-return summary;
-
 // IP Location lookup declaration
 const ipLocationDeclaration: FunctionDeclaration = {
   name: "show_ip_location",
@@ -945,7 +870,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [getLatestNewsDeclaration] }, // Added real-time news fetching tool
 	    { functionDeclarations: [ahmiaSearchDeclaration] }, // Ahmia dark web search
 		{ functionDeclarations: [crawlOnionDeclaration] },
-		{ functionDeclarations: [shodanIpLookupDeclaration] }, // Shodan IP Lookup
       ],
     });
   }, [setConfig, setModel, location, locationError]);
@@ -1206,7 +1130,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
               onShowMap('current-location-unavailable');
             }
           });
-		
         } else if (name === ipLocationDeclaration.name) {
           const ipAddress = (fc.args as any).ip_address;
           console.log(`IP Location requested for: ${ipAddress}`);
@@ -1220,40 +1143,15 @@ In order to ask Black AI a question, the user must give the prompt in the conver
               onShowMap('current-location-unavailable');
             }
           });
-
-		} else if (name === shodanIpLookupDeclaration.name) {   // ← INSERT HERE
-          const ipAddress = String((fc.args as any)?.ip_address || "");
-          console.log(`Shodan IP lookup requested for: ${ipAddress}`);
-          if (!ipAddress) {
-            client.sendToolResponse({
-              functionResponses: [{
-                id: fc.id,
-                name: fc.name,
-                response: { result: "No IP address was provided. Please specify a valid IP address to look up." }
-              }]
-            });
-          } else {
-            fetchShodanIpData(ipAddress).then((result) => {
-              client.sendToolResponse({
-                functionResponses: [{
-                  id: fc.id,
-                  name: fc.name,
-                  response: { result }
-                }]
-              });
-            });
-          }
-
-        }                           
+        }
       });
-			
+
       // Handle news fetching asynchronously before sending tool response
       const newsCalls  = toolCall.functionCalls.filter(fc => fc.name === getLatestNewsDeclaration.name);
       const ahmiaCalls = toolCall.functionCalls.filter(fc => fc.name === ahmiaSearchDeclaration.name);
       const otherCalls = toolCall.functionCalls.filter(fc =>
         fc.name !== getLatestNewsDeclaration.name &&
-        fc.name !== ahmiaSearchDeclaration.name &&
-		fc.name !== shodanIpLookupDeclaration.name
+        fc.name !== ahmiaSearchDeclaration.name
       );
 
       // Fetch news for all news calls, then send combined tool response
