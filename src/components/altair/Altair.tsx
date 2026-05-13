@@ -31,19 +31,19 @@ interface AltairProps {
   onShowPhotoGeo: () => void;
   onShowURLSpyware: () => void;
   onShowPhishFilesStealer: () => void;
-  onShowDigitalFootprint: () => void; // Added for Digital Footprint widget
-  onShowURLMasker: () => void; // Added for URL Masker widget
-  onShowWorldIPTV: () => void; // Added for World IPTV widget
-  onShowPhishMaker: () => void; // Added for Phish Maker widget
-  onShowDataBank: () => void; // Added for Data Bank widget
-  onShowAndroidSpyware: () => void; // Added for Android Spyware widget
-  onShowVoiceCloner: () => void; // Added for Voice Cloner widget
-  onShowMS365Hijacker: () => void; // Added for MS365 Hijacker widget
-  onShowFlightTracker: () => void; // Added for Flight Tracker widget
-  onShowDeviceActivityTracker: () => void; // Added for Device Activity Tracker widget
-  onShowCode: (code: string, language: string) => void; // Added for Hack Code widget
-  onShowBitchatTracker: () => void; // Added for BitChat Tracker widget
-  onShowBlackEyes: () => void; // Added for Black Eyes IP Camera widget
+  onShowDigitalFootprint: () => void;
+  onShowURLMasker: () => void;
+  onShowWorldIPTV: () => void;
+  onShowPhishMaker: () => void;
+  onShowDataBank: () => void;
+  onShowAndroidSpyware: () => void;
+  onShowVoiceCloner: () => void;
+  onShowMS365Hijacker: () => void;
+  onShowFlightTracker: () => void;
+  onShowDeviceActivityTracker: () => void;
+  onShowCode: (code: string, language: string) => void;
+  onShowBitchatTracker: () => void;
+  onShowBlackEyes: () => void;
 }
 
 const altairDeclaration: FunctionDeclaration = {
@@ -76,7 +76,6 @@ const mapDeclaration: FunctionDeclaration = {
     required: ["location"]
   }
 };
-
 
 const youtubeDeclaration: FunctionDeclaration = {
   name: "search_youtube_video",
@@ -252,7 +251,6 @@ const phishFilesStealerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Digital Footprint widget declaration
 const digitalFootprintDeclaration: FunctionDeclaration = {
   name: "show_digital_footprint",
   description: "Display the Digital Footprint widget tool for searching or looking up digital information and investigating digital footprints.",
@@ -263,7 +261,6 @@ const digitalFootprintDeclaration: FunctionDeclaration = {
   }
 };
 
-// Data Bank widget declaration
 const dataBankDeclaration: FunctionDeclaration = {
   name: "show_data_bank",
   description: "Display the Data Bank widget to access database, data bank, or search through database records. Use this when user wants to access the data bank, database, or look up information in the database.",
@@ -274,7 +271,6 @@ const dataBankDeclaration: FunctionDeclaration = {
   }
 };
 
-// URL Masker widget declaration
 const urlMaskerDeclaration: FunctionDeclaration = {
   name: "show_url_masker",
   description: "Display the URL Masker tool when user asks to mask, spoof, or disguise a URL. Use this for URL masking, URL spoofing, or creating disguised links.",
@@ -285,7 +281,6 @@ const urlMaskerDeclaration: FunctionDeclaration = {
   }
 };
 
-// World IPTV widget declaration
 const worldIPTVDeclaration: FunctionDeclaration = {
   name: "show_world_iptv",
   description: "Display the World IPTV widget to watch or view world IPTV channels. Use this when the user asks to watch or view world IPTV channels.",
@@ -296,7 +291,6 @@ const worldIPTVDeclaration: FunctionDeclaration = {
   }
 };
 
-// Phish Maker widget declaration
 const phishMakerDeclaration: FunctionDeclaration = {
   name: "show_phish_maker",
   description: "Display the Phish Maker widget. Use this when the user asks to create a phishing page or site.",
@@ -307,7 +301,6 @@ const phishMakerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Android Spyware widget declaration
 const androidSpywareDeclaration: FunctionDeclaration = {
   name: "show_android_spyware",
   description: "Display the Android Spyware widget when the user asks to track or monitor someone's android device.",
@@ -318,7 +311,6 @@ const androidSpywareDeclaration: FunctionDeclaration = {
   }
 };
 
-// Voice Cloner widget declaration
 const voiceClonerDeclaration: FunctionDeclaration = {
   name: "show_voice_cloner",
   description: "Display the Voice Cloner widget when the user asks to clone a voice, manipulate voice, or use voice cloning tools.",
@@ -329,7 +321,6 @@ const voiceClonerDeclaration: FunctionDeclaration = {
   }
 };
 
-// MS365 Hijacker widget declaration
 const ms365HijackerDeclaration: FunctionDeclaration = {
   name: "show_ms365_hijacker",
   description: "Display the Microsoft 365 Hijacker widget when the user asks to hack, hijack, or access Microsoft 365 accounts.",
@@ -340,7 +331,6 @@ const ms365HijackerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Flight Tracker widget declaration
 const flightTrackerDeclaration: FunctionDeclaration = {
   name: "show_flight_tracker",
   description: "Display the Live Aircraft Tracker widget when the user asks to track or monitor live aircrafts and flights.",
@@ -351,7 +341,6 @@ const flightTrackerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Device Activity Tracker widget declaration
 const deviceActivityTrackerDeclaration: FunctionDeclaration = {
   name: "show_device_activity_tracker",
   description: "Display the Device Activity Tracker widget when the user asks to track or monitor device activity.",
@@ -362,7 +351,6 @@ const deviceActivityTrackerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Hack Code widget declaration
 const codeDeclaration: FunctionDeclaration = {
   name: "generate_code",
   description: "Generate and display code in a syntax-highlighted Hack Code widget when user asks to generate, write, create, or show code in any programming language",
@@ -382,7 +370,6 @@ const codeDeclaration: FunctionDeclaration = {
   }
 };
 
-// BitChat Tracker widget declaration
 const bitchatTrackerDeclaration: FunctionDeclaration = {
   name: "show_bitchat_tracker",
   description: "Display the BitChat Tracker widget when the user asks to track bitchat users, bitchat chats, or monitor bitchat activity.",
@@ -393,7 +380,6 @@ const bitchatTrackerDeclaration: FunctionDeclaration = {
   }
 };
 
-// Phone Number Location declaration
 const phoneLocationDeclaration: FunctionDeclaration = {
   name: "show_phone_number_location",
   description: "Show the geographic location of a mobile or phone number on the map when user asks to locate, track, find, or show the location of a specific phone number or mobile number",
@@ -409,8 +395,7 @@ const phoneLocationDeclaration: FunctionDeclaration = {
   }
 };
 
-// AHMIA DARK WEB SEARCH 
-
+// AHMIA DARK WEB SEARCH
 const ahmiaSearchDeclaration: FunctionDeclaration = {
   name: "search_ahmia",
   description: "Search dark web search engine to find information, .onion sites, and Tor hidden services. Use this when the user asks to search the dark web, find onion sites, or look up something on Tor.",
@@ -438,40 +423,42 @@ const crawlOnionDeclaration: FunctionDeclaration = {
   }
 };
 
+// ── Censys IP Lookup declaration ──────────────────────────────────────────────
+const censysIPLookupDeclaration: FunctionDeclaration = {
+  name: "lookup_ip_censys",
+  description: "Search and retrieve open ports, running services, protocols, TLS certificates, geolocation, ASN, and other reconnaissance information about an IP address using the IOT Intelligence. Use this when the user asks to scan, look up, check, inspect, or get information about an IP address.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      ip_address: {
+        type: Type.STRING,
+        description: "The IP address to look up (e.g., '8.8.8.8', '1.1.1.1', '192.168.0.1')"
+      }
+    },
+    required: ["ip_address"]
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const fetchAhmiaResults = async (query: string): Promise<string> => {
   try {
     console.log(`[Ahmia] Searching for: "${query}"`);
-
     const response = await fetch(`/api/ahmia?q=${encodeURIComponent(query)}`);
     console.log(`[Ahmia] Proxy response status: ${response.status}`);
-
     if (!response.ok) {
       const errText = await response.text();
       console.error(`[Ahmia] Proxy error:`, errText);
       return `Dark web search failed (status ${response.status}). Make sure the api/ahmia.ts file exists in your project root and has been deployed to Vercel.`;
     }
-
     const data = await response.json();
     console.log(`[Ahmia] Got ${data.results?.length ?? 0} results`);
-
-    if (data.error) {
-      return `Ahmia error: ${data.error}`;
-    }
-
+    if (data.error) return `Ahmia error: ${data.error}`;
     const results = data.results as { title: string; url: string; description: string }[];
-
-    if (!results || results.length === 0) {
-      return `No results found on dark web for "${query}". Try different keywords.`;
-    }
-
+    if (!results || results.length === 0) return `No results found on dark web for "${query}". Try different keywords.`;
     const formatted = results.map((r, i) =>
-  `Result ${i + 1}:
-- Title: ${r.title || '(no title)'}
-- Description: ${r.description || 'No description available'}
-- Onion Address: ${r.url}`
-).join('\n\n');
-
-return `The dark web search results for "${query}". Here are the findings, summarize each result by its title and description only, do not read out the onion URLs:\n\n${formatted}`;
+      `Result ${i + 1}:\n- Title: ${r.title || '(no title)'}\n- Description: ${r.description || 'No description available'}\n- Onion Address: ${r.url}`
+    ).join('\n\n');
+    return `The dark web search results for "${query}". Here are the findings, summarize each result by its title and description only, do not read out the onion URLs:\n\n${formatted}`;
   } catch (err: any) {
     console.error(`[Ahmia] Fetch error:`, err);
     return `Error searching dark web: ${err.message}`;
@@ -485,125 +472,203 @@ const fetchOnionPage = async (onionUrl: string): Promise<string> => {
     const data = await response.json();
     if (!data.success) return `Could not reach page: ${data.error}`;
     const linksSummary = data.links?.length
-      ? '\n\nLinks found:\n' + data.links.map((l: any, i: number) => `${i+1}. ${l.text} → ${l.href}`).join('\n')
+      ? '\n\nLinks found:\n' + data.links.map((l: any, i: number) => `${i + 1}. ${l.text} → ${l.href}`).join('\n')
       : '';
     return `Crawled: ${onionUrl}\nTitle: ${data.title}\nGateway: ${data.gateway}\n\n--- CONTENT ---\n${data.text}${linksSummary}`;
   } catch (err: any) { return `Error: ${err.message}`; }
 };
+
+// ── Censys IP lookup helper ───────────────────────────────────────────────────
+// Calls the server-side Vercel proxy at /api/censys to avoid CORS and keep
+// credentials off the browser.
+const fetchCensysIPData = async (ipAddress: string): Promise<string> => {
+  try {
+    const response = await fetch(`/api/censys?ip=${encodeURIComponent(ipAddress)}`);
+
+    if (!response.ok) {
+      if (response.status === 404) return `No data found for IP address ${ipAddress} in the IOT Intelligence database.`;
+      if (response.status === 401) return `IOT Intelligence authentication failed. Please verify your API credentials.`;
+      if (response.status === 429) return `IOT Intelligence rate limit exceeded. Please try again in a moment.`;
+      return `Censys API returned an error: HTTP ${response.status}.`;
+    }
+
+    const data = await response.json();
+
+    // Platform API v3 nests data under result.resource
+    // v2 legacy used result directly — handle both
+    const result = data.result?.resource ?? data.result ?? data;
+
+    const lines: string[] = [];
+    lines.push(`Censys intelligence report for IP address ${ipAddress}.`);
+
+    // Autonomous System — v3 uses autonomous_system, same as v2
+    const as = result.autonomous_system ?? result.network?.autonomous_system;
+    if (as) {
+      const asParts: string[] = [];
+      if (as.asn)          asParts.push(`AS number ${as.asn}`);
+      if (as.name)         asParts.push(`organization ${as.name}`);
+      if (as.bgp_prefix)   asParts.push(`BGP prefix ${as.bgp_prefix}`);
+      if (as.country_code) asParts.push(`country code ${as.country_code}`);
+      if (asParts.length)  lines.push(`Autonomous system: ${asParts.join(', ')}.`);
+    }
+
+    // Geographic location — v3 uses location or geo
+    const loc = result.location ?? result.geo;
+    if (loc) {
+      const locParts = [loc.city, loc.province, loc.country].filter(Boolean);
+      if (locParts.length) lines.push(`Geographic location: ${locParts.join(', ')}.`);
+      if (loc.coordinates?.latitude != null && loc.coordinates?.longitude != null) {
+        lines.push(`Coordinates: latitude ${loc.coordinates.latitude.toFixed(4)}, longitude ${loc.coordinates.longitude.toFixed(4)}.`);
+      }
+      if (loc.postal_code) lines.push(`Postal code: ${loc.postal_code}.`);
+      if (loc.timezone)    lines.push(`Timezone: ${loc.timezone}.`);
+    }
+
+    // DNS / hostnames
+    const dnsNames = result.dns?.reverse_dns?.names ?? result.dns?.names ?? result.hostnames;
+    if (dnsNames?.length) {
+      lines.push(`Reverse DNS hostnames: ${dnsNames.slice(0, 5).join(', ')}.`);
+    }
+
+    // Open services / ports — v3 uses services array
+    const services = result.services ?? result.ports ?? [];
+    if (services.length > 0) {
+      lines.push(`Found ${services.length} open service${services.length !== 1 ? 's' : ''}.`);
+      services.forEach((svc: any) => {
+        const port    = svc.port;
+        const proto   = svc.protocol ?? svc.transport_protocol ?? 'TCP';
+        const tcpProto = svc.transport_protocol ?? 'tcp';
+        let portLine  = `Port ${port} ${tcpProto.toUpperCase()}: ${proto}.`;
+
+        // Software (e.g. AnyDesk RMM)
+        if (svc.software?.length) {
+          const sw = svc.software.map((s: any) =>
+            [s.vendor, s.product].filter(Boolean).join(' ')
+          ).filter(Boolean).join(', ');
+          if (sw) portLine += ` Software: ${sw}.`;
+        }
+
+        // Labels (e.g. CAMERA, IOT, LOGIN_PAGE, RMM)
+        if (svc.labels?.length) {
+          const labelVals = svc.labels.map((l: any) => l.value ?? l).filter(Boolean).join(', ');
+          if (labelVals) portLine += ` Tags: ${labelVals}.`;
+        }
+
+        lines.push(portLine);
+
+        // RTSP server info
+        if (svc.rtsp?.server) {
+          lines.push(`  RTSP server: ${svc.rtsp.server}.`);
+        }
+
+        // TLS certificate
+        const cert = svc.cert?.parsed ?? svc.tls?.certificates?.leaf_data;
+        if (cert) {
+          if (cert.subject?.common_name?.[0])  lines.push(`  TLS CN: ${cert.subject.common_name[0]}.`);
+          if (cert.issuer?.common_name?.[0])   lines.push(`  Issued by: ${cert.issuer.common_name[0]}.`);
+          if (cert.names?.length)              lines.push(`  Cert names: ${cert.names.slice(0, 3).join(', ')}.`);
+        }
+
+        // HTTP endpoints
+        if (svc.endpoints?.length) {
+          const firstEndpoint = svc.endpoints[0];
+          const http = firstEndpoint?.http;
+          if (http) {
+            if (http.status_code) lines.push(`  HTTP status: ${http.status_code}.`);
+            if (http.html_title)  lines.push(`  HTTP title: ${http.html_title}.`);
+            if (http.uri)         lines.push(`  URL: ${http.uri}.`);
+          }
+          // Detect login pages from redirect chain
+          const loginEndpoint = svc.endpoints.find((e: any) =>
+            e.path?.toLowerCase().includes('login')
+          );
+          if (loginEndpoint) {
+            lines.push(`  Login page detected at: ${loginEndpoint.path}.`);
+          }
+        }
+      });
+    } else {
+      lines.push(`No open ports or services detected by IOT Intelligence.`);
+    }
+
+    // Hardware type (e.g. CAMERA, IOT)
+    if (result.hardware?.type?.length) {
+      lines.push(`Hardware type: ${result.hardware.type.join(', ')}.`);
+    }
+
+    // Last scan time — v3 uses scan_time on services, no top-level field
+    const lastSeen = result.last_updated_at ?? result.last_seen ?? result.observed_at
+      ?? result.services?.[0]?.scan_time;
+    if (lastSeen) lines.push(`Last scanned by Censys: ${new Date(lastSeen).toUTCString()}.`);
+
+    return lines.join(' ');
+  } catch (err: any) {
+    console.error('[Censys] Fetch error:', err);
+    return `Failed to retrieve Censys data for ${ipAddress}: ${err.message}`;
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Helper: resolve phone number country/region using OpenCage API
 const fetchPhoneNumberLocation = async (
   phoneNumber: string
 ): Promise<{ lat: number; lon: number; city: string; region: string; country: string } | null> => {
   try {
-    // Derive a geocodable query from the dial code prefix
     const cleaned = phoneNumber.replace(/[\s\-().]/g, '');
     const dialMap: Record<string, string> = {
   // --- US AREA CODES (Prefix '1' + 3-digit code) ---
-  // Alabama
   '1205': 'Alabama, United States', '1251': 'Alabama, United States', '1256': 'Alabama, United States', '1334': 'Alabama, United States',
-  // Alaska
   '1907': 'Alaska, United States',
-  // Arizona
   '1480': 'Arizona, United States', '1520': 'Arizona, United States', '1602': 'Arizona, United States', '1623': 'Arizona, United States', '1928': 'Arizona, United States',
-  // Arkansas
   '1479': 'Arkansas, United States', '1501': 'Arkansas, United States', '1870': 'Arkansas, United States',
-  // California
   '1209': 'California, United States', '1213': 'California, United States', '1310': 'California, United States', '1323': 'California, United States', '1408': 'California, United States', '1415': 'California, United States', '1510': 'California, United States', '1530': 'California, United States', '1559': 'California, United States', '1562': 'California, United States', '1619': 'California, United States', '1626': 'California, United States', '1650': 'California, United States', '1661': 'California, United States', '1707': 'California, United States', '1714': 'California, United States', '1760': 'California, United States', '1805': 'California, United States', '1818': 'California, United States', '1831': 'California, United States', '1858': 'California, United States', '1909': 'California, United States', '1916': 'California, United States', '1925': 'California, United States', '1949': 'California, United States', '1951': 'California, United States',
-  // Colorado
   '1303': 'Colorado, United States', '1719': 'Colorado, United States', '1970': 'Colorado, United States',
-  // Connecticut
   '1203': 'Connecticut, United States', '1860': 'Connecticut, United States',
-  // Delaware
   '1302': 'Delaware, United States',
-  // District of Columbia
   '1202': 'Washington , United States',
-  // Florida
   '1239': 'Florida, United States', '1305': 'Florida, United States', '1321': 'Florida, United States', '1352': 'Florida, United States', '1386': 'Florida, United States', '1407': 'Florida, United States', '1561': 'Florida, United States', '1727': 'Florida, United States', '1772': 'Florida, United States', '1813': 'Florida, United States', '1850': 'Florida, United States', '1863': 'Florida, United States', '1904': 'Florida, United States', '1941': 'Florida, United States', '1954': 'Florida, United States',
-  // Georgia
   '1229': 'Georgia, United States', '1404': 'Georgia, United States', '1478': 'Georgia, United States', '1706': 'Georgia, United States', '1770': 'Georgia, United States', '1912': 'Georgia, United States',
-  // Hawaii
   '1808': 'Hawaii, United States',
-  // Idaho
   '1208': 'Idaho, United States',
-  // Illinois
   '1217': 'Illinois, United States', '1309': 'Illinois, United States', '1312': 'Illinois, United States', '1618': 'Illinois, United States', '1630': 'Illinois, United States', '1708': 'Illinois, United States', '1773': 'Illinois, United States', '1815': 'Illinois, United States', '1847': 'Illinois, United States',
-  // Indiana
   '1219': 'Indiana, United States', '1260': 'Indiana, United States', '1317': 'Indiana, United States', '1574': 'Indiana, United States', '1765': 'Indiana, United States', '1812': 'Indiana, United States',
-  // Iowa
   '1319': 'Iowa, United States', '1515': 'Iowa, United States', '1563': 'Iowa, United States', '1641': 'Iowa, United States', '1712': 'Iowa, United States',
-  // Kansas
   '1316': 'Kansas, United States', '1620': 'Kansas, United States', '1785': 'Kansas, United States', '1913': 'Kansas, United States',
-  // Kentucky
   '1270': 'Kentucky, United States', '1502': 'Kentucky, United States', '1606': 'Kentucky, United States', '1859': 'Kentucky, United States',
-  // Louisiana
   '1225': 'Louisiana, United States', '1318': 'Louisiana, United States', '1337': 'Louisiana, United States', '1504': 'Louisiana, United States', '1985': 'Louisiana, United States',
-  // Maine
   '1207': 'Maine, United States',
-  // Maryland
   '1301': 'Maryland, United States', '1410': 'Maryland, United States',
-  // Massachusetts
   '1413': 'Massachusetts, United States', '1508': 'Massachusetts, United States', '1617': 'Massachusetts, United States', '1781': 'Massachusetts, United States', '1978': 'Massachusetts, United States',
-  // Michigan
   '1231': 'Michigan, United States', '1248': 'Michigan, United States', '1269': 'Michigan, United Michigan', '1313': 'Michigan, United States', '1517': 'Michigan, United States', '1586': 'Michigan, United States', '1616': 'Michigan, United States', '1734': 'Michigan, United States', '1810': 'Michigan, United States', '1906': 'Michigan, United States', '1989': 'Michigan, United States',
-  // Minnesota
   '1218': 'Minnesota, United States', '1320': 'Minnesota, United States', '1507': 'Minnesota, United States', '1612': 'Minnesota, United States', '1651': 'Minnesota, United States', '1763': 'Minnesota, United States', '1952': 'Minnesota, United States',
-  // Mississippi
   '1228': 'Mississippi, United States', '1601': 'Mississippi, United States', '1662': 'Mississippi, United States',
-  // Missouri
   '1314': 'Missouri, United States', '1417': 'Missouri, United States', '1573': 'Missouri, United States', '1636': 'Missouri, United States', '1660': 'Missouri, United States', '1816': 'Missouri, United States',
-  // Montana
   '1406': 'Montana, United States',
-  // Nebraska
   '1308': 'Nebraska, United States', '1402': 'Nebraska, United States',
-  // Nevada
   '1702': 'Nevada, United States', '1775': 'Nevada, United States',
-  // New Hampshire
   '1603': 'New Hampshire, United States',
-  // New Jersey
   '1201': 'New Jersey, United States', '1609': 'New Jersey, United States', '1732': 'New Jersey, United States', '1856': 'New Jersey, United States', '1908': 'New Jersey, United States', '1973': 'New Jersey, United States',
-  // New Mexico
   '1505': 'New Mexico, United States', '1575': 'New Mexico, United States',
-  // New York
   '1212': 'New York, United States', '1315': 'New York, United States', '1516': 'New York, United States', '1518': 'New York, United States', '1585': 'New York, United States', '1607': 'New York, United States', '1631': 'New York, United States', '1716': 'New York, United States', '1718': 'New York, United States', '1845': 'New York, United States', '1914': 'New York, United States', '1917': 'New York, United States',
-  // North Carolina
   '1252': 'North Carolina, United States', '1336': 'North Carolina, United States', '1704': 'North Carolina, United States', '1828': 'North Carolina, United States', '1910': 'North Carolina, United States', '1919': 'North Carolina, United States',
-  // North Dakota
   '1701': 'North Dakota, United States',
-  // Ohio
   '1216': 'Ohio, United States', '1330': 'Ohio, United States', '1419': 'Ohio, United States', '1440': 'Ohio, United States', '1513': 'Ohio, United States', '1614': 'Ohio, United States', '1740': 'Ohio, United States', '1937': 'Ohio, United States',
-  // Oklahoma
   '1405': 'Oklahoma, United States', '1580': 'Oklahoma, United States', '1918': 'Oklahoma, United States',
-  // Oregon
   '1503': 'Oregon, United States', '1541': 'Oregon, United States',
-  // Pennsylvania
   '1215': 'Pennsylvania, United States', '1412': 'Pennsylvania, United States', '1570': 'Pennsylvania, United States', '1610': 'Pennsylvania, United States', '1717': 'Pennsylvania, United States', '1724': 'Pennsylvania, United States', '1814': 'Pennsylvania, United States',
-  // Rhode Island
   '1401': 'Rhode Island, United States',
-  // South Carolina
   '1803': 'South Carolina, United States', '1843': 'South Carolina, United States', '1864': 'South Carolina, United States',
-  // South Dakota
   '1605': 'South Dakota, United States',
-  // Tennessee
   '1423': 'Tennessee, United States', '1615': 'Tennessee, United States', '1731': 'Tennessee, United States', '1865': 'Tennessee, United States', '1901': 'Tennessee, United States', '1931': 'Tennessee, United States',
-  // Texas
   '1210': 'Texas, United States', '1214': 'Texas, United States', '1254': 'Texas, United States', '1281': 'Texas, United States', '1325': 'Texas, United States', '1361': 'Texas, United States', '1409': 'Texas, United States', '1432': 'Texas, United States', '1512': 'Texas, United States', '1713': 'Texas, United States', '1806': 'Texas, United States', '1817': 'Texas, United States', '1830': 'Texas, United States', '1903': 'Texas, United States', '1915': 'Texas, United States', '1936': 'Texas, United States', '1940': 'Texas, United States', '1956': 'Texas, United States', '1972': 'Texas, United States', '1979': 'Texas, United States',
-  // Utah
   '1435': 'Utah, United States', '1801': 'Utah, United States',
-  // Vermont
   '1802': 'Vermont, United States',
-  // Virginia
   '1276': 'Virginia, United States', '1434': 'Virginia, United States', '1540': 'Virginia, United States', '1703': 'Virginia, United States', '1757': 'Virginia, United States', '1804': 'Virginia, United States',
-  // Washington
   '1206': 'Washington, United States', '1253': 'Washington, United States', '1360': 'Washington, United States', '1425': 'Washington, United States', '1509': 'Washington, United States',
-  // West Virginia
   '1304': 'West Virginia, United States',
-  // Wisconsin
   '1262': 'Wisconsin, United States', '1414': 'Wisconsin, United States', '1608': 'Wisconsin, United States', '1715': 'Wisconsin, United States', '1920': 'Wisconsin, United States',
-  // Wyoming
   '1307': 'Wyoming, United States',
-
-  // --- INTERNATIONAL CODES (Original Data) ---
+  // --- INTERNATIONAL CODES ---
   '7': 'Moscow, Russia', '20': 'Cairo, Egypt', '27': 'Johannesburg, South Africa',
   '30': 'Athens, Greece', '31': 'Amsterdam, Netherlands', '32': 'Brussels, Belgium',
   '33': 'Paris, France', '34': 'Madrid, Spain', '36': 'Budapest, Hungary',
@@ -624,34 +689,22 @@ const fetchPhoneNumberLocation = async (
 };
 
     let query = '';
-    // Strip leading +
     const digits = cleaned.startsWith('+') ? cleaned.slice(1) : cleaned;
-
-    // Try 4-digit, 3-digit, 2-digit, 1-digit prefix
-    for (const len of [4, 3, 2, 1]) { 
-  const prefix = digits.slice(0, len);
-  if (dialMap[prefix]) {
-    query = dialMap[prefix];
-    break;
-  }
-}
-
-    if (!query) query = 'Washington , United States'; // sensible default
+    for (const len of [4, 3, 2, 1]) {
+      const prefix = digits.slice(0, len);
+      if (dialMap[prefix]) { query = dialMap[prefix]; break; }
+    }
+    if (!query) query = 'Washington , United States';
 
     const apiKey = process.env.REACT_APP_OPENCAGE_API_KEY || '';
     const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(query)}&key=${apiKey}&limit=1&no_annotations=1`;
     const response = await fetch(url);
     if (!response.ok) throw new Error(`OpenCage API error: ${response.status}`);
-
     const data = await response.json();
     if (!data.results || data.results.length === 0) throw new Error('No results from OpenCage');
-
     const result = data.results[0];
     const components = result.components;
-
-    // Add random jitter (~3–10 km) to simulate tower triangulation
-const jitter = () => (Math.random() * 0.063 + 0.027) * (Math.random() < 0.5 ? -1 : 1);
-
+    const jitter = () => (Math.random() * 0.063 + 0.027) * (Math.random() < 0.5 ? -1 : 1);
     return {
       lat: result.geometry.lat + jitter(),
       lon: result.geometry.lng + jitter(),
@@ -681,29 +734,18 @@ const ipLocationDeclaration: FunctionDeclaration = {
   }
 };
 
-// Helper function to fetch IP location from WeatherAPI
 const fetchIPLocation = async (ipAddress: string): Promise<{ lat: number; lon: number; city: string; region: string; country: string } | null> => {
   try {
     const apiKey = process.env.REACT_APP_WEATHER_API_KEY || '7ca30df5844b4b6087230641212908';
     const response = await fetch(`https://api.weatherapi.com/v1/ip.json?key=${apiKey}&q=${ipAddress}`);
-    if (!response.ok) {
-      console.error('Failed to fetch IP location:', response.statusText);
-      return null;
-    }
+    if (!response.ok) { console.error('Failed to fetch IP location:', response.statusText); return null; }
     const data = await response.json();
-    return {
-      lat: data.lat,
-      lon: data.lon,
-      city: data.city,
-      region: data.region,
-      country: data.country_name
-    };
+    return { lat: data.lat, lon: data.lon, city: data.city, region: data.region, country: data.country_name };
   } catch (error) {
     console.error('Error fetching IP location:', error);
     return null;
   }
 };
-
 
 const getLatestNewsDeclaration: FunctionDeclaration = {
   name: "get_latest_news",
@@ -768,30 +810,17 @@ function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onS
       } catch (error: any) {
         setLocationError(error);
         console.warn("Location access not available:", error.message);
-        // Don't spam console with location errors
       }
     };
-
     fetchLocation();
   }, []);
 
   useEffect(() => {
-    // Get user's timezone or fallback to system timezone
     let timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    // If we have location, we could potentially get more timezone
-    // For now, use the browser's detected timezone
     const currentDate = new Date().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'long',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      hour12: true,
-      timeZoneName: 'short',
-      timeZone: timeZone
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hour12: true, timeZoneName: 'short', timeZone: timeZone
     });
 
     setModel("gemini-2.5-flash-native-audio-preview-12-2025");
@@ -839,33 +868,32 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [photoGeoDeclaration] },
         { functionDeclarations: [urlSpywareDeclaration] },
         { functionDeclarations: [phishFilesStealerDeclaration] },
-        { functionDeclarations: [digitalFootprintDeclaration] }, // Added Digital Footprint tool declaration
-        { functionDeclarations: [urlMaskerDeclaration] }, // Added URL Masker tool declaration
-        { functionDeclarations: [worldIPTVDeclaration] }, // Added World IPTV tool declaration
-        { functionDeclarations: [phishMakerDeclaration] }, // Added Phish Maker tool declaration
-        { functionDeclarations: [dataBankDeclaration] }, // Added Data Bank tool declaration
-        { functionDeclarations: [androidSpywareDeclaration] }, // Added Android Spyware tool declaration
-        { functionDeclarations: [voiceClonerDeclaration] }, // Added Voice Cloner tool declaration
-        { functionDeclarations: [ms365HijackerDeclaration] }, // Added MS365 Hijacker tool declaration
-        { functionDeclarations: [flightTrackerDeclaration] }, // Added Flight Tracker tool declaration
-        { functionDeclarations: [deviceActivityTrackerDeclaration] }, // Added Device Activity Tracker tool declaration
-        { functionDeclarations: [codeDeclaration] }, // Added Hack Code widget tool declaration
-        { functionDeclarations: [bitchatTrackerDeclaration] }, // Added BitChat Tracker tool declaration
-        { functionDeclarations: [blackEyesDeclaration] }, // Added Black Eyes IP Camera tool declaration
-        { functionDeclarations: [phoneLocationDeclaration] }, // Added Phone Number Location tool declaration
-        { functionDeclarations: [ipLocationDeclaration] }, // Added IP Location lookup tool declaration
-        { functionDeclarations: [getLatestNewsDeclaration] }, // Added real-time news fetching tool
-	    { functionDeclarations: [ahmiaSearchDeclaration] }, // Ahmia dark web search
-		{ functionDeclarations: [crawlOnionDeclaration] },
+        { functionDeclarations: [digitalFootprintDeclaration] },
+        { functionDeclarations: [urlMaskerDeclaration] },
+        { functionDeclarations: [worldIPTVDeclaration] },
+        { functionDeclarations: [phishMakerDeclaration] },
+        { functionDeclarations: [dataBankDeclaration] },
+        { functionDeclarations: [androidSpywareDeclaration] },
+        { functionDeclarations: [voiceClonerDeclaration] },
+        { functionDeclarations: [ms365HijackerDeclaration] },
+        { functionDeclarations: [flightTrackerDeclaration] },
+        { functionDeclarations: [deviceActivityTrackerDeclaration] },
+        { functionDeclarations: [codeDeclaration] },
+        { functionDeclarations: [bitchatTrackerDeclaration] },
+        { functionDeclarations: [blackEyesDeclaration] },
+        { functionDeclarations: [phoneLocationDeclaration] },
+        { functionDeclarations: [ipLocationDeclaration] },
+        { functionDeclarations: [getLatestNewsDeclaration] },
+        { functionDeclarations: [ahmiaSearchDeclaration] },
+        { functionDeclarations: [crawlOnionDeclaration] },
+        { functionDeclarations: [censysIPLookupDeclaration] }, // ← Censys IP lookup
       ],
     });
   }, [setConfig, setModel, location, locationError]);
 
   useEffect(() => {
     const onToolCall = (toolCall: LiveServerToolCall) => {
-      if (!toolCall.functionCalls) {
-        return;
-      }
+      if (!toolCall.functionCalls) return;
 
       toolCall.functionCalls.forEach((fc) => {
         const { name } = fc;
@@ -874,322 +902,178 @@ In order to ask Black AI a question, the user must give the prompt in the conver
           const str = (fc.args as any).json_graph;
           setJSONString(str);
         } else if (name === mapDeclaration.name) {
-          const location = (fc.args as any).location;
-          console.log(`Map requested for: ${location}`);
-          onShowMap(location);
+          onShowMap((fc.args as any).location);
         } else if (name === youtubeDeclaration.name) {
-          const query = (fc.args as any).query;
-          console.log(`YouTube search requested: ${query}`);
-          onSearchYouTube(query);
+          onSearchYouTube((fc.args as any).query);
         } else if (name === cyberThreatDeclaration.name) {
-          console.log(`Cyber Threat Map requested`);
           onShowCyberThreatMap();
         } else if (name === worldMonitorDeclaration.name) {
-          console.log(`World Monitor Map requested`);
           onShowWorldMonitorMap();
         } else if (name === emailSpooferDeclaration.name) {
-          console.log(`Email Spoofer requested`);
           onShowEmailSpoofer();
         } else if (name === blackEyesDeclaration.name) {
-          console.log(`Black Eyes IP Camera requested`);
           onShowBlackEyes();
         } else if (name === creditCardDeclaration.name) {
-          console.log(`Credit Card Generator requested`);
           onShowCreditCard();
-        }
-        else if (name === currentLocationDeclaration.name) {
-          console.log(`Current location requested`);
-          console.log('Current location data:', location);
+        } else if (name === currentLocationDeclaration.name) {
           if (location) {
-            const currentLocationString = `${location.latitude},${location.longitude}`;
-            console.log('Showing map with coordinates:', currentLocationString);
-            onShowMap(currentLocationString);
+            onShowMap(`${location.latitude},${location.longitude}`);
           } else {
-            console.warn('Location not available');
-            // Still try to show map widget with a fallback message
             onShowMap('current-location-unavailable');
           }
         } else if (name === openWebsiteDeclaration.name) {
-          const url = (fc.args as any).url;
-          let formattedUrl = url;
-
-          // Add https:// if no protocol is specified
-          if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            formattedUrl = `https://${url}`;
-          }
-
-          // Open website in new tab
-          try {
-            window.open(formattedUrl, '_blank', 'noopener,noreferrer');
-            console.log(`Successfully opened website: ${url}`);
-          } catch (error) {
-            console.error(`Failed to open website: ${url}`, error);
-          }
-
-          console.log(`Opening website requested: ${url}`);
+          let url = (fc.args as any).url;
+          if (!url.startsWith('http://') && !url.startsWith('https://')) url = `https://${url}`;
+          try { window.open(url, '_blank', 'noopener,noreferrer'); } catch (e) { console.error(e); }
         } else if (name === searchWebsiteDeclaration.name) {
           const website = (fc.args as any).website;
-          const query = (fc.args as any).query;
-
-          // Build search URL based on the website
+          const query   = (fc.args as any).query;
+          const enc     = encodeURIComponent(query);
+          const uname   = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
           let searchUrl = '';
-          const encodedQuery = encodeURIComponent(query);
-
           switch (website.toLowerCase()) {
-            case 'google':
-              searchUrl = `https://www.google.com/search?q=${encodedQuery}`;
-              break;
-            case 'amazon':
-              searchUrl = `https://www.amazon.com/s?k=${encodedQuery}`;
-              break;
-            case 'ebay':
-              searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}`;
-              break;
-            case 'temu':
-              searchUrl = `https://www.temu.com/search_result.html?search_key=${encodedQuery}`;
-              break;
-            case 'wikipedia':
-              searchUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${encodedQuery}`;
-              break;
-            case 'reddit':
-              searchUrl = `https://www.reddit.com/search/?q=${encodedQuery}`;
-              break;
-            case 'telegram':
-              const tUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://t.me/${tUsernameQuery}`;
-              break;
-            case 'tiktok':
-              const ttUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://www.tiktok.com/@${ttUsernameQuery}`;
-              break;
-            case 'x':
-              // Remove spaces and special characters for username-like queries
-              const xUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://x.com/${xUsernameQuery}`;
-              break;
-            case 'facebook':
-                // Remove spaces and special characters for Facebook username
-              const fbUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://www.facebook.com/${fbUsernameQuery}`;
-              break;
-            case 'instagram':
-                // Remove spaces and special characters for Instagram username
-              const igUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://www.instagram.com/${igUsernameQuery}`;
-              break;
-            case 'bing':
-              searchUrl = `https://www.bing.com/search?q=${encodedQuery}`;
-              break;
-            case 'duckduckgo':
-              searchUrl = `https://duckduckgo.com/?q=${encodedQuery}`;
-              break;
-            case 'github':
-              searchUrl = `https://github.com/search?q=${encodedQuery}`;
-              break;
-            case 'stackoverflow':
-              searchUrl = `https://stackoverflow.com/search?q=${encodedQuery}`;
-              break;
-            case 'linkedin':
-              const liUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://www.linkedin.com/in/${liUsernameQuery}`;
-              break;
-            case 'pinterest':
-              searchUrl = `https://www.pinterest.com/search/pins/?q=${encodedQuery}`;
-              break;
-            case 'twitch':
-              searchUrl = `https://www.twitch.tv/search?term=${encodedQuery}`;
-              break;
-            case 'spotify':
-              searchUrl = `https://open.spotify.com/search/${encodedQuery}`;
-              break;
-            case 'soundcloud':
-              searchUrl = `https://soundcloud.com/search?q=${encodedQuery}`;
-              break;
-            case 'onlyfans':
-              // Remove spaces and special characters for OnlyFans username
-              const ofUsernameQuery = query.replace(/\s+/g, '').replace(/[^a-zA-Z0-9._]/g, '');
-              searchUrl = `https://onlyfans.com/${ofUsernameQuery}`;
-              break;
-            case 'imdb':
-              searchUrl = `https://www.imdb.com/find?q=${encodedQuery}`;
-              break;
+            case 'google':       searchUrl = `https://www.google.com/search?q=${enc}`; break;
+            case 'amazon':       searchUrl = `https://www.amazon.com/s?k=${enc}`; break;
+            case 'ebay':         searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${enc}`; break;
+            case 'temu':         searchUrl = `https://www.temu.com/search_result.html?search_key=${enc}`; break;
+            case 'wikipedia':    searchUrl = `https://en.wikipedia.org/wiki/Special:Search?search=${enc}`; break;
+            case 'reddit':       searchUrl = `https://www.reddit.com/search/?q=${enc}`; break;
+            case 'telegram':     searchUrl = `https://t.me/${uname}`; break;
+            case 'tiktok':       searchUrl = `https://www.tiktok.com/@${uname}`; break;
+            case 'x':            searchUrl = `https://x.com/${uname}`; break;
+            case 'facebook':     searchUrl = `https://www.facebook.com/${uname}`; break;
+            case 'instagram':    searchUrl = `https://www.instagram.com/${uname}`; break;
+            case 'bing':         searchUrl = `https://www.bing.com/search?q=${enc}`; break;
+            case 'duckduckgo':   searchUrl = `https://duckduckgo.com/?q=${enc}`; break;
+            case 'github':       searchUrl = `https://github.com/search?q=${enc}`; break;
+            case 'stackoverflow':searchUrl = `https://stackoverflow.com/search?q=${enc}`; break;
+            case 'linkedin':     searchUrl = `https://www.linkedin.com/in/${uname}`; break;
+            case 'pinterest':    searchUrl = `https://www.pinterest.com/search/pins/?q=${enc}`; break;
+            case 'twitch':       searchUrl = `https://www.twitch.tv/search?term=${enc}`; break;
+            case 'spotify':      searchUrl = `https://open.spotify.com/search/${enc}`; break;
+            case 'soundcloud':   searchUrl = `https://soundcloud.com/search?q=${enc}`; break;
+            case 'onlyfans':     searchUrl = `https://onlyfans.com/${uname}`; break;
+            case 'imdb':         searchUrl = `https://www.imdb.com/find?q=${enc}`; break;
             case 'images':
-            case 'google images':
-              searchUrl = `https://www.google.com/search?q=${encodedQuery}&tbm=isch`;
-              break;
-            default:
-              // Default to Google search if website not recognized
-              searchUrl = `https://www.google.com/search?q=${encodedQuery}+${website}`;
-              break;
+            case 'google images':searchUrl = `https://www.google.com/search?q=${enc}&tbm=isch`; break;
+            default:             searchUrl = `https://www.google.com/search?q=${enc}+${website}`; break;
           }
-
-          // Open search results in new tab
-          try {
-            window.open(searchUrl, '_blank', 'noopener,noreferrer');
-            console.log(`Successfully opened search results for "${query}" on ${website}`);
-          } catch (error) {
-            console.error(`Failed to open search results for "${query}" on ${website}`, error);
-          }
-
-          console.log(`Search requested: "${query}" on ${website}`);
+          try { window.open(searchUrl, '_blank', 'noopener,noreferrer'); } catch (e) { console.error(e); }
         } else if (name === webCheckDeclaration.name) {
-            const domain = (fc.args as any).domain;
-            console.log(`Web check requested for: ${domain}`);
-
-            // Clean the domain (remove protocol if present)
-            const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-
-            // Build web-check.xyz URL
-            const webCheckUrl = `https://web-check.xyz/check/${cleanDomain}`;
-
-            try {
-                window.open(webCheckUrl, '_blank', 'noopener,noreferrer');
-                console.log(`Successfully opened web check for "${cleanDomain}"`);
-            } catch (error) {
-                console.error(`Failed to open web check for "${cleanDomain}"`, error);
-            }
+          const cleanDomain = (fc.args as any).domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+          try { window.open(`https://web-check.xyz/check/${cleanDomain}`, '_blank', 'noopener,noreferrer'); } catch (e) { console.error(e); }
         } else if (name === "show_bitcoin_privkey_widget") {
-            console.log(`Bitcoin Private Key Widget requested`);
-            onShowBitcoinPrivkey();
+          onShowBitcoinPrivkey();
         } else if (name === socialActivityTrackerDeclaration.name) {
-          console.log(`Social Activity Tracker Widget requested`);
           onShowSocialActivityTracker();
         } else if (name === photoGeoDeclaration.name) {
-          console.log(`Photo Geo Location Widget requested`);
           onShowPhotoGeo();
         } else if (name === urlSpywareDeclaration.name) {
-          console.log(`URL Spyware Widget requested`);
           onShowURLSpyware();
         } else if (name === phishFilesStealerDeclaration.name) {
-          console.log(`Phish Stealer Widget requested`);
           onShowPhishFilesStealer();
-        } else if (fc.name === digitalFootprintDeclaration.name) {
-          console.log(`Digital Footprint Widget requested`);
+        } else if (name === digitalFootprintDeclaration.name) {
           onShowDigitalFootprint();
-        } else if (fc.name === urlMaskerDeclaration.name) {
-          console.log(`URL Masker widget requested`);
+        } else if (name === urlMaskerDeclaration.name) {
           onShowURLMasker();
         } else if (name === "show_world_iptv") {
-          console.log(`World IPTV widget requested`);
           onShowWorldIPTV();
         } else if (name === phishMakerDeclaration.name) {
-          console.log(`Phish Maker widget requested`);
           onShowPhishMaker();
         } else if (name === dataBankDeclaration.name) {
-          console.log(`Data Bank widget requested`);
           onShowDataBank();
         } else if (name === androidSpywareDeclaration.name) {
-          console.log(`Android Spyware widget requested`);
           onShowAndroidSpyware();
         } else if (name === voiceClonerDeclaration.name) {
-          console.log(`Voice Cloner widget requested`);
           onShowVoiceCloner();
         } else if (name === ms365HijackerDeclaration.name) {
-          console.log(`Microsoft 365 Hijacker widget requested`);
           onShowMS365Hijacker();
         } else if (name === "show_flight_tracker") {
-          console.log(`Live Aircraft Tracker widget requested`);
           onShowFlightTracker();
         } else if (name === "show_device_activity_tracker") {
-          console.log(`Device Activity Tracker widget requested`);
           onShowDeviceActivityTracker();
         } else if (name === codeDeclaration.name) {
-          const code = (fc.args as any).code;
-          const language = (fc.args as any).language;
-          console.log(`Hack Code widget requested for language: ${language}`);
-          onShowCode(code, language);
+          onShowCode((fc.args as any).code, (fc.args as any).language);
         } else if (name === bitchatTrackerDeclaration.name) {
-          console.log(`BitChat Tracker widget requested`);
           onShowBitchatTracker();
         } else if (name === phoneLocationDeclaration.name) {
           const phoneNumber = (fc.args as any).phone_number;
-          console.log(`Phone number location requested for: ${phoneNumber}`);
           fetchPhoneNumberLocation(phoneNumber).then((locationData) => {
             if (locationData) {
-              const coordString = `${locationData.lat},${locationData.lon}`;
-              console.log(`Phone ${phoneNumber} located at: ${coordString} (${locationData.city}, ${locationData.region}, ${locationData.country})`);
-              onShowMap(coordString);
+              onShowMap(`${locationData.lat},${locationData.lon}`);
             } else {
-              console.error(`Failed to locate phone number: ${phoneNumber}`);
               onShowMap('current-location-unavailable');
             }
           });
         } else if (name === ipLocationDeclaration.name) {
           const ipAddress = (fc.args as any).ip_address;
-          console.log(`IP Location requested for: ${ipAddress}`);
           fetchIPLocation(ipAddress).then((locationData) => {
             if (locationData) {
-              const coordString = `${locationData.lat},${locationData.lon}`;
-              console.log(`IP ${ipAddress} located at: ${coordString} (${locationData.city}, ${locationData.region}, ${locationData.country})`);
-              onShowMap(coordString);
+              onShowMap(`${locationData.lat},${locationData.lon}`);
             } else {
-              console.error(`Failed to locate IP: ${ipAddress}`);
               onShowMap('current-location-unavailable');
             }
           });
         }
       });
 
-      // Handle news fetching asynchronously before sending tool response
-      const newsCalls  = toolCall.functionCalls.filter(fc => fc.name === getLatestNewsDeclaration.name);
-      const ahmiaCalls = toolCall.functionCalls.filter(fc => fc.name === ahmiaSearchDeclaration.name);
-      const otherCalls = toolCall.functionCalls.filter(fc =>
+      // ── Async tool calls ────────────────────────────────────────────────────
+
+      const newsCalls    = toolCall.functionCalls.filter(fc => fc.name === getLatestNewsDeclaration.name);
+      const ahmiaCalls   = toolCall.functionCalls.filter(fc => fc.name === ahmiaSearchDeclaration.name);
+      const crawlCalls   = toolCall.functionCalls.filter(fc => fc.name === crawlOnionDeclaration.name);
+      const censysCalls  = toolCall.functionCalls.filter(fc => fc.name === censysIPLookupDeclaration.name);
+      const otherCalls   = toolCall.functionCalls.filter(fc =>
         fc.name !== getLatestNewsDeclaration.name &&
-        fc.name !== ahmiaSearchDeclaration.name
+        fc.name !== ahmiaSearchDeclaration.name &&
+        fc.name !== crawlOnionDeclaration.name &&
+        fc.name !== censysIPLookupDeclaration.name
       );
 
-      // Fetch news for all news calls, then send combined tool response
+      // News
       if (newsCalls.length > 0) {
         Promise.all(newsCalls.map(async (fc) => {
-          const topic = (fc.args as any).topic || "top news";
+          const topic   = (fc.args as any).topic || "top news";
           const country = (fc.args as any).country;
-          console.log(`[BlackAI] Fetching news: topic="${topic}" country="${country || 'any'}"`);
           const newsContent = await fetchLatestNews(topic, country);
-          console.log("[BlackAI] News fetched:", newsContent);
-          return {
-            response: { output: { success: true, news: newsContent } },
-            id: fc.id,
-            name: fc.name,
-          };
-        })).then((newsResponses) => {
-          client.sendToolResponse({ functionResponses: newsResponses });
-        });
+          return { response: { output: { success: true, news: newsContent } }, id: fc.id, name: fc.name };
+        })).then((r) => client.sendToolResponse({ functionResponses: r }));
       }
 
-		const crawlCalls = toolCall.functionCalls.filter(fc => fc.name === crawlOnionDeclaration.name);
+      // Crawl onion
+      if (crawlCalls.length > 0) {
+        Promise.all(crawlCalls.map(async (fc) => {
+          const content = await fetchOnionPage((fc.args as any).url);
+          return { response: { output: { success: true, content } }, id: fc.id, name: fc.name };
+        })).then((r) => client.sendToolResponse({ functionResponses: r }));
+      }
 
-	// Also add crawlOnionDeclaration.name to the otherCalls filter
-
-	if (crawlCalls.length > 0) {
-  	Promise.all(crawlCalls.map(async (fc) => {
-    const content = await fetchOnionPage((fc.args as any).url);
-    return { response: { output: { success: true, content } }, id: fc.id, name: fc.name };
-  	})).then(r => client.sendToolResponse({ functionResponses: r }));
-	}
-		
-	// ── Handle Ahmia search — fetch results and feed them back to the AI ──
+      // Ahmia dark web search
       if (ahmiaCalls.length > 0) {
         Promise.all(ahmiaCalls.map(async (fc) => {
-          const query = (fc.args as any).query as string;
-          console.log(`[BlackAI] Searching Ahmia for: "${query}"`);
-          const results = await fetchAhmiaResults(query);
-          console.log("[BlackAI] Ahmia results fetched");
-          return {
-            response: { output: { success: true, results } },
-            id: fc.id,
-            name: fc.name,
-          };
-        })).then((ahmiaResponses) => {
-          client.sendToolResponse({ functionResponses: ahmiaResponses });
-        });
+          const results = await fetchAhmiaResults((fc.args as any).query as string);
+          return { response: { output: { success: true, results } }, id: fc.id, name: fc.name };
+        })).then((r) => client.sendToolResponse({ functionResponses: r }));
+      }
+
+      // ── Censys IP lookup — results spoken aloud, no widget ─────────────────
+      if (censysCalls.length > 0) {
+        Promise.all(censysCalls.map(async (fc) => {
+          const ipAddress = (fc.args as any).ip_address as string;
+          console.log(`[Censys] Looking up IP: ${ipAddress}`);
+          const summary = await fetchCensysIPData(ipAddress);
+          console.log(`[Censys] Result: ${summary.substring(0, 120)}...`);
+          return { response: { output: { success: true, report: summary } }, id: fc.id, name: fc.name };
+        })).then((r) => client.sendToolResponse({ functionResponses: r }));
       }
       // ───────────────────────────────────────────────────────────────────────
 
+      // Synchronous / widget calls
       if (otherCalls.length) {
         setTimeout(
           () =>
             client.sendToolResponse({
-              functionResponses: otherCalls?.map((fc) => ({
+              functionResponses: otherCalls.map((fc) => ({
                 response: {
                   output: {
                     success: true,
@@ -1210,47 +1094,49 @@ In order to ask Black AI a question, the user must give the prompt in the conver
                       : fc.name === currentLocationDeclaration.name
                       ? `Displaying your current location on the map.`
                       : fc.name === openWebsiteDeclaration.name
-                      ? `Opening ${ (fc.args as any).url } in a new tab.`
+                      ? `Opening ${(fc.args as any).url} in a new tab.`
                       : fc.name === searchWebsiteDeclaration.name
                       ? `Searching for "${(fc.args as any).query}" on ${(fc.args as any).website} and opening results in a new tab.`
                       : fc.name === webCheckDeclaration.name
                       ? `Running web check analysis for "${(fc.args as any).domain}" and opening results in a new tab.`
                       : fc.name === "show_bitcoin_privkey_widget"
-                      ? `Bitcoin Private Key database widget opened. You can now search or lookup Bitcoin private keys.`
+                      ? `Bitcoin Private Key database widget opened.`
                       : fc.name === socialActivityTrackerDeclaration.name
-                      ? `Social Activity Tracker widget opened. You can now track and search social platform activity.`
+                      ? `Social Activity Tracker widget opened.`
                       : fc.name === photoGeoDeclaration.name
-                      ? `Photo Geo Location widget opened. You can now track or search geo location from photo or image.`
+                      ? `Photo Geo Location widget opened.`
                       : fc.name === urlSpywareDeclaration.name
-                      ? `URL Spyware widget opened. You can now track and monitor someone using malicious URL.`
+                      ? `URL Spyware widget opened.`
                       : fc.name === phishFilesStealerDeclaration.name
-                      ? `Phish Stealer widget opened. You can now steal or grab someone's files using phishing page.`
-                      : fc.name === digitalFootprintDeclaration.name // Response for Digital Footprint tool
-                      ? `Digital Footprint widget opened. You can now look up and investigate digital footprints.`
-                      : fc.name === urlMaskerDeclaration.name // Response for URL Masker tool
-                      ? `URL Masker widget opened. You can now mask any malicious or phishing url.`
-                      : fc.name === "show_world_iptv" // Response for World IPTV widget
-                      ? `World IPTV widget opened. You can now watch world IPTV channels.`
-                      : fc.name === phishMakerDeclaration.name // Response for Phish Maker widget
-                      ? `Phish Maker widget opened. You can now create phishing pages or sites.`
-                      : fc.name === dataBankDeclaration.name // Response for Data Bank widget
-                      ? `Data Bank widget opened. You can now access the private leaked databases.`
-                      : fc.name === androidSpywareDeclaration.name // Response for Android Spyware widget
-                      ? `Android Spyware widget opened. You can now track someone's Android device.`
-                      : fc.name === voiceClonerDeclaration.name // Response for Voice Cloner widget
-                      ? `Voice Cloner widget opened. You can now clone and manipulate any voice.`
-                      : fc.name === ms365HijackerDeclaration.name // Response for MS365 Hijacker widget
-                      ? `Microsoft 365 Hijacker widget opened.You can now hack access the Microsoft 365 accounts.`
-                      : fc.name === "show_flight_tracker" // Response for Flight Tracker widget
-                      ? `Live Aircraft Tracker widget opened. You can now track and monitor live aircrafts and flights.`
-                      : fc.name === "show_device_activity_tracker" // Response for Device Activity Tracker widget
-                      ? `Device Activity Tracker widget opened. You can now track and monitor device activity.`
-                      : fc.name === codeDeclaration.name // Response for Hack Code widget
+                      ? `Phish Stealer widget opened.`
+                      : fc.name === digitalFootprintDeclaration.name
+                      ? `Digital Footprint widget opened.`
+                      : fc.name === urlMaskerDeclaration.name
+                      ? `URL Masker widget opened.`
+                      : fc.name === "show_world_iptv"
+                      ? `World IPTV widget opened.`
+                      : fc.name === phishMakerDeclaration.name
+                      ? `Phish Maker widget opened.`
+                      : fc.name === dataBankDeclaration.name
+                      ? `Data Bank widget opened.`
+                      : fc.name === androidSpywareDeclaration.name
+                      ? `Android Spyware widget opened.`
+                      : fc.name === voiceClonerDeclaration.name
+                      ? `Voice Cloner widget opened.`
+                      : fc.name === ms365HijackerDeclaration.name
+                      ? `Microsoft 365 Hijacker widget opened.`
+                      : fc.name === "show_flight_tracker"
+                      ? `Live Aircraft Tracker widget opened.`
+                      : fc.name === "show_device_activity_tracker"
+                      ? `Device Activity Tracker widget opened.`
+                      : fc.name === codeDeclaration.name
                       ? `Code displayed successfully in the Hack Code widget.`
                       : fc.name === bitchatTrackerDeclaration.name
-                      ? `BitChat Tracker widget opened. You can now track bitchat users and chats.`
-                      : fc.name === ipLocationDeclaration.name // Response for IP Location lookup
+                      ? `BitChat Tracker widget opened.`
+                      : fc.name === ipLocationDeclaration.name
                       ? `IP address location displayed on the map.`
+                      : fc.name === phoneLocationDeclaration.name
+                      ? `Phone number location displayed on the map.`
                       : "Function executed successfully"
                   }
                 },
@@ -1262,21 +1148,20 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         );
       }
     };
+
     client.off("toolcall", onToolCall);
     client.on("toolcall", onToolCall);
-    return () => {
-      client.off("toolcall", onToolCall);
-    };
+    return () => { client.off("toolcall", onToolCall); };
   }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowSocialActivityTracker, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
 
   const embedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (embedRef.current && jsonString) {
-      console.log("jsonString", jsonString);
       vegaEmbed(embedRef.current, JSON.parse(jsonString));
     }
   }, [embedRef, jsonString]);
+
   return <div className="vega-embed" ref={embedRef} />;
 }
 
