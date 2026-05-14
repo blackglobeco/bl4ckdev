@@ -186,21 +186,6 @@ const searchWebsiteDeclaration: FunctionDeclaration = {
   }
 };
 
-const webCheckDeclaration: FunctionDeclaration = {
-  name: "run_web_check",
-  description: "Run a comprehensive web check analysis for any website using web-check.xyz",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      domain: {
-        type: Type.STRING,
-        description: "The domain or website URL to analyze (e.g., 'instagram.com', 'google.com', 'example.org')"
-      }
-    },
-    required: ["domain"]
-  }
-};
-
 const bitcoinPrivkeyDeclaration: FunctionDeclaration = {
   name: "show_bitcoin_privkey_widget",
   description: "Display the Bitcoin Private Key database widget when user asks about Bitcoin private keys, Bitcoin wallet keys, or Bitcoin key generation.",
@@ -863,7 +848,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [currentLocationDeclaration] },
         { functionDeclarations: [openWebsiteDeclaration] },
         { functionDeclarations: [searchWebsiteDeclaration] },
-        { functionDeclarations: [webCheckDeclaration] },
         { functionDeclarations: [socialActivityTrackerDeclaration] },
         { functionDeclarations: [photoGeoDeclaration] },
         { functionDeclarations: [urlSpywareDeclaration] },
@@ -959,9 +943,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
             default:             searchUrl = `https://www.google.com/search?q=${enc}+${website}`; break;
           }
           try { window.open(searchUrl, '_blank', 'noopener,noreferrer'); } catch (e) { console.error(e); }
-        } else if (name === webCheckDeclaration.name) {
-          const cleanDomain = (fc.args as any).domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
-          try { window.open(`https://web-check.xyz/check/${cleanDomain}`, '_blank', 'noopener,noreferrer'); } catch (e) { console.error(e); }
         } else if (name === "show_bitcoin_privkey_widget") {
           onShowBitcoinPrivkey();
         } else if (name === socialActivityTrackerDeclaration.name) {
@@ -1097,8 +1078,6 @@ In order to ask Black AI a question, the user must give the prompt in the conver
                       ? `Opening ${(fc.args as any).url} in a new tab.`
                       : fc.name === searchWebsiteDeclaration.name
                       ? `Searching for "${(fc.args as any).query}" on ${(fc.args as any).website} and opening results in a new tab.`
-                      : fc.name === webCheckDeclaration.name
-                      ? `Running web check analysis for "${(fc.args as any).domain}" and opening results in a new tab.`
                       : fc.name === "show_bitcoin_privkey_widget"
                       ? `Bitcoin Private Key database widget opened.`
                       : fc.name === socialActivityTrackerDeclaration.name
