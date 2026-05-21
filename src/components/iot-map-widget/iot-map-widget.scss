@@ -1,0 +1,176 @@
+.iot-map-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iot-map-widget {
+  background: #080808;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  width: 90vw;
+  max-width: 1000px;
+  height: 80vh;
+  max-height: 800px;
+  box-shadow:
+    0 0 0 1px rgba(220, 38, 38, 0.15),
+    0 0 40px rgba(220, 38, 38, 0.12),
+    0 20px 60px rgba(0, 0, 0, 0.6);
+
+  // Subtle corner brackets
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 0;
+    left: 0;
+    border-top: 2px solid rgba(220, 38, 38, 0.7);
+    border-left: 2px solid rgba(220, 38, 38, 0.7);
+    border-radius: 6px 0 0 0;
+  }
+
+  &::after {
+    bottom: 0;
+    right: 0;
+    border-bottom: 2px solid rgba(220, 38, 38, 0.7);
+    border-right: 2px solid rgba(220, 38, 38, 0.7);
+    border-radius: 0 0 6px 0;
+  }
+}
+
+.iot-close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: rgba(220, 38, 38, 0.9);
+  font-size: 14px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: all 0.2s;
+  z-index: 100;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0;
+
+  &:hover {
+    background: rgba(220, 38, 38, 0.2);
+    border-color: rgba(220, 38, 38, 0.8);
+    color: #ff4444;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+  }
+}
+
+.iot-map-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.iot-map-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #080808;
+  z-index: 5;
+
+  span {
+    color: rgba(220, 38, 38, 0.8);
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    animation: iotBlink 1.2s ease-in-out infinite;
+  }
+}
+
+.iot-loading-ring {
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(220, 38, 38, 0.15);
+  border-top-color: rgba(220, 38, 38, 0.85);
+  border-radius: 50%;
+  animation: iotSpin 0.9s linear infinite;
+}
+
+.iot-map-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #080808;
+
+  .iot-error-icon {
+    font-size: 32px;
+    color: rgba(220, 38, 38, 0.7);
+  }
+
+  span:last-child {
+    color: rgba(220, 38, 38, 0.6);
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+}
+
+@keyframes iotSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes iotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .iot-map-widget {
+    width: 98vw;
+    height: 92vh;
+    border-radius: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .iot-map-widget {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+}
