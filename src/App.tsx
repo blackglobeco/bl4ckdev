@@ -22,7 +22,6 @@ import { Altair } from "./components/altair/Altair";
 import ControlTray from "./components/control-tray/ControlTray";
 import { AnimatedBackground } from "./components/animated-background/AnimatedBackground";
 import { MapWidget } from "./components/map-widget/MapWidget";
-import { IotMapWidget } from "./components/iot-map-widget/IotMapWidget";
 import { YouTubeWidget } from "./components/youtube-widget/YouTubeWidget";
 import { CyberThreatMapWidget } from "./components/cyber-threat-map/CyberThreatMapWidget";
 import { WorldMonitorMapWidget } from "./components/world-monitor-map/WorldMonitorMapWidget";
@@ -71,9 +70,6 @@ function App() {
   // map widget state
   const [showMapWidget, setShowMapWidget] = useState<boolean>(false);
   const [mapLocation, setMapLocation] = useState<string>("");
-  // iot map widget state
-  const [showIotMapWidget, setShowIotMapWidget] = useState<boolean>(false);
-  const [iotMapLocation, setIotMapLocation] = useState<string>("");
   // youtube widget state
   const [showYouTubeWidget, setShowYouTubeWidget] = useState<boolean>(false);
   const [youTubeQuery, setYouTubeQuery] = useState<string>("");
@@ -127,7 +123,6 @@ function App() {
   // Close all widgets function to ensure clean state
   const closeAllWidgets = () => {
     setShowMapWidget(false);
-    setShowIotMapWidget(false);
     setShowYouTubeWidget(false);
     setShowCyberThreatWidget(false);
     setShowWorldMonitorWidget(false);
@@ -153,7 +148,6 @@ function App() {
     setShowBitchatTrackerWidget(false);
     setShowBlackEyesWidget(false);
     setMapLocation('');
-    setIotMapLocation('');
     setYouTubeQuery('');
   };
 
@@ -202,13 +196,6 @@ function App() {
                   setMapLocation(location);
                   setTimeout(() => {
                     setShowMapWidget(true);
-                  }, 100);
-                }}
-                onShowIotMap={(location) => {
-                  closeAllWidgets();
-                  setIotMapLocation(location);
-                  setTimeout(() => {
-                    setShowIotMapWidget(true);
                   }, 100);
                 }}
                 onSearchYouTube={(query) => {
@@ -376,13 +363,6 @@ function App() {
         {showMapWidget && (
           <MapWidget
             location={mapLocation}
-            onClose={closeAllWidgets}
-          />
-        )}
-
-        {showIotMapWidget && (
-          <IotMapWidget
-            location={iotMapLocation}
             onClose={closeAllWidgets}
           />
         )}

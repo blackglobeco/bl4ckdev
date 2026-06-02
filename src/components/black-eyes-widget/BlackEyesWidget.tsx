@@ -14,7 +14,7 @@ export const BlackEyesWidget: React.FC<BlackEyesWidgetProps> = ({ onClose }) => 
         <div className="black-eyes-content">
           <div className="black-eyes-container">
             <iframe
-              src="https://bl4ckeyes.onrender.com"
+              src="https://bl4ckeye.onrender.com"
               className="black-eyes-iframe"
               title="Black Eyes IP Camera Tool"
               allowFullScreen

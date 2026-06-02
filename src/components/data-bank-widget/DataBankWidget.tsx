@@ -14,7 +14,7 @@ export const DataBankWidget: React.FC<DataBankWidgetProps> = ({ onClose }) => {
         <div className="data-bank-content">
           <div className="data-bank-container">
             <iframe
-              src="https://blackai-db.onrender.com"
+              src="https://bl4ckdb.onrender.com"
               className="data-bank-iframe"
               title="Data Bank Tool"
               allowFullScreen

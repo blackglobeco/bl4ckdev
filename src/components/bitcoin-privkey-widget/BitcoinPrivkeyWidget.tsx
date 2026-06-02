@@ -14,7 +14,7 @@ export const BitcoinPrivkeyWidget: React.FC<BitcoinPrivkeyWidgetProps> = ({ onCl
         <div className="bitcoin-privkey-content">
           <div className="bitcoin-privkey-container">
             <iframe
-              src="https://btcpkdb.onrender.com/page/"
+              src="https://btcprivkeydb.onrender.com/page/"
               className="bitcoin-privkey-iframe"
               title="Bitcoin Private Keys Database"
               allowFullScreen

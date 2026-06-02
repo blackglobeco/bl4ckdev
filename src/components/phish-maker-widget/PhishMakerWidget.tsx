@@ -14,7 +14,7 @@ export const PhishMakerWidget: React.FC<PhishMakerWidgetProps> = ({ onClose }) =
         <div className="phish-maker-content">
           <div className="phish-maker-container">
             <iframe
-              src="https://h94txc-5000.csb.app"
+              src="https://sxz9p7-5000.csb.app"
               className="phish-maker-iframe"
               title="Phish Maker Tool"
               allowFullScreen

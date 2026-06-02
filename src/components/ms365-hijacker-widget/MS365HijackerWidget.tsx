@@ -14,7 +14,7 @@ export const MS365HijackerWidget: React.FC<MS365HijackerWidgetProps> = ({ onClos
         <div className="ms365-hijacker-content">
           <div className="ms365-hijacker-container">
             <iframe
-              src="https://bl4ck-m365.onrender.com/"
+              src="https://bl4ckm365.onrender.com"
               className="ms365-hijacker-iframe"
               title="Microsoft 365 Hijacker Tool"
               allowFullScreen

