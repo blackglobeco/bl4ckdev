@@ -432,8 +432,7 @@ const webCheckDeclaration: FunctionDeclaration = {
 // ── OpenMeasures Social Search declaration ────────────────────────────────────
 // Exact API site parameter values from:
 // https://docs.openmeasures.io/docs/guides/sources
-//
-// Platforms with sub-types default to the comment/content variant:
+// Full enum confirmed from API docs (28 values):
 //   tiktok       → tiktok_comment   (or tiktok_video)
 //   bitchute     → bitchute_comment (or bitchute_video)
 //   lbry/odysee  → lbry_comment     (or lbry_video)
@@ -441,6 +440,8 @@ const webCheckDeclaration: FunctionDeclaration = {
 //   rutube       → rutube_comment   (or rutube_video)
 //   truth social → truth_social
 //   scored       → win
+//   whatsapp     → whatsapp
+//   kiwifarms    → kiwifarms
 const socialSearchDeclaration: FunctionDeclaration = {
   name: "search_social_media_openmeasures",
   description:
@@ -449,13 +450,14 @@ const socialSearchDeclaration: FunctionDeclaration = {
     "4chan (4chan), 8kun/8chan (8kun), " +
     "BitChute comments (bitchute_comment), BitChute videos (bitchute_video), " +
     "Bluesky (bluesky), Fediverse (fediverse), Gab (gab), Gettr (gettr), " +
+    "Kiwi Farms (kiwifarms), " +
     "LBRY/Odysee comments (lbry_comment), LBRY/Odysee videos (lbry_video), " +
     "MeWe (mewe), Minds (minds), OK/Odnoklassniki (ok), Parler (parler), Poal (poal), " +
     "Rumble comments (rumble_comment), Rumble videos (rumble_video), " +
     "RuTube comments (rutube_comment), RuTube videos (rutube_video), " +
     "Scored/Win Communities (win), Telegram (telegram), " +
     "TikTok comments (tiktok_comment), TikTok videos (tiktok_video), " +
-    "Truth Social (truth_social), VK (vk), Wimkin (wimkin). " +
+    "Truth Social (truth_social), VK (vk), WhatsApp (whatsapp), Wimkin (wimkin). " +
     "Use this when the user asks to search social media, find posts about a topic, " +
     "look up what people are saying on any of these platforms, or research online narratives. " +
     "After receiving results read them aloud — do NOT show any widget.",
@@ -473,9 +475,9 @@ const socialSearchDeclaration: FunctionDeclaration = {
         description:
           "Exact API site value. Use one of: " +
           "4chan, 8kun, bitchute_comment, bitchute_video, bluesky, fediverse, gab, gettr, " +
-          "lbry_comment, lbry_video, mewe, minds, ok, parler, poal, " +
+          "kiwifarms, lbry_comment, lbry_video, mewe, minds, ok, parler, poal, " +
           "rumble_comment, rumble_video, rutube_comment, rutube_video, " +
-          "win, telegram, tiktok_comment, tiktok_video, truth_social, vk, wimkin. " +
+          "win, telegram, tiktok_comment, tiktok_video, truth_social, vk, whatsapp, wimkin. " +
           "Default: telegram.",
       },
       limit: {
@@ -628,6 +630,7 @@ const CONTENT_FIELD_MAP: Record<string, string> = {
   'fediverse':       'content_cleaned',
   'gab':             'content',
   'gettr':           'txt',
+  'kiwifarms':       'content',
   'lbry_comment':    'comment',
   'lbry_video':      'value.description',
   'mewe':            'content',
@@ -645,6 +648,7 @@ const CONTENT_FIELD_MAP: Record<string, string> = {
   'tiktok_video':    'desc',
   'truth_social':    'content_cleaned',
   'vk':              'text',
+  'whatsapp':        'message',
   'wimkin':          'content',
 };
 
@@ -658,6 +662,7 @@ const USERNAME_FIELD_MAP: Record<string, string> = {
   'fediverse':       'account.acct',
   'gab':             'account.acct',
   'gettr':           'uinf.username',
+  'kiwifarms':       'author',
   'lbry_comment':    'channel_name',
   'lbry_video':      'signing_channel.value.title',
   'mewe':            'username',
@@ -675,6 +680,7 @@ const USERNAME_FIELD_MAP: Record<string, string> = {
   'tiktok_video':    'author',
   'truth_social':    'account.acct',
   'vk':              'author',
+  'whatsapp':        'author',
   'wimkin':          'author_username',
 };
 
