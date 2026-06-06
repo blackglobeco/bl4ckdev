@@ -29,7 +29,6 @@ import { EmailSpooferWidget } from "./components/email-spoofer-widget/EmailSpoof
 import { AndroidSpywareWidget } from './components/android-spyware-widget/AndroidSpywareWidget';
 import { CreditCardWidget } from "./components/credit-card-widget/CreditCardWidget";
 import { BitcoinPrivkeyWidget } from "./components/bitcoin-privkey-widget/BitcoinPrivkeyWidget";
-import { SocialActivityTrackerWidget } from "./components/social-activity-tracker-widget/SocialActivityTrackerWidget";
 import { PhotoGeoWidget } from "./components/photo-geo-widget/PhotoGeoWidget";
 import { URLSpywareWidget } from "./components/url-spyware-widget/URLSpywareWidget";
 import { PhishFilesStealerWidget } from "./components/phish-files-stealer-widget/PhishFilesStealerWidget";
@@ -83,8 +82,6 @@ function App() {
   const [showCreditCardWidget, setShowCreditCardWidget] = useState<boolean>(false);
   // bitcoin privkey widget state
   const [showBitcoinPrivkeyWidget, setShowBitcoinPrivkeyWidget] = useState<boolean>(false);
-  // social activity tracker widget state
-  const [showSocialActivityTrackerWidget, setShowSocialActivityTrackerWidget] = useState<boolean>(false);
   // photo geo widget state
   const [showPhotoGeoWidget, setShowPhotoGeoWidget] = useState<boolean>(false);
   // url spyware widget state
@@ -129,7 +126,6 @@ function App() {
     setShowEmailSpooferWidget(false);
     setShowCreditCardWidget(false);
     setShowBitcoinPrivkeyWidget(false);
-    setShowSocialActivityTrackerWidget(false);
     setShowPhotoGeoWidget(false);
     setShowURLSpywareWidget(false);
     setShowPhishFilesStealerWidget(false);
@@ -239,12 +235,6 @@ function App() {
                   closeAllWidgets();
                   setTimeout(() => {
                     setShowBitcoinPrivkeyWidget(true);
-                  }, 100);
-                }}
-                onShowSocialActivityTracker={() => {
-                  closeAllWidgets();
-                  setTimeout(() => {
-                    setShowSocialActivityTrackerWidget(true);
                   }, 100);
                 }}
                 onShowPhotoGeo={() => {
@@ -406,12 +396,6 @@ function App() {
 
         {showDataBankWidget && (
           <DataBankWidget
-            onClose={closeAllWidgets}
-          />
-        )}
-
-        {showSocialActivityTrackerWidget && (
-          <SocialActivityTrackerWidget
             onClose={closeAllWidgets}
           />
         )}
