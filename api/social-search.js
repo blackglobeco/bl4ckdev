@@ -38,6 +38,11 @@ const SITE_ALIASES = {
   // Scored / Win Communities — API slug is 'win'
   'scored':              'win',
   'win':                 'win',
+  // WhatsApp
+  'whatsapp':            'whatsapp',
+  // Kiwi Farms
+  'kiwifarms':           'kiwifarms',
+  'kiwi farms':          'kiwifarms',
   // Platforms that pass through unchanged
   '4chan':               '4chan',
   '8kun':                '8kun',
