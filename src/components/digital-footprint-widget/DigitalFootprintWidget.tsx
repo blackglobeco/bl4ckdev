@@ -5,22 +5,20 @@ interface DigitalFootprintWidgetProps {
   onClose: () => void;
 }
 
-export const DigitalFootprintWidget: React.FC<DigitalFootprintWidgetProps> = ({ onClose }) => {
-  return (
-    <div className="digital-footprint-backdrop" onClick={onClose}>
-      <div className="digital-footprint-widget" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>×</button>
-        <div className="digital-footprint-content">
-          <div className="digital-footprint-container">
-            <iframe
-              src="https://bl4ckdf.onrender.com"
-              className="digital-footprint-iframe"
-              title="Digital Footprint Tool"
-              allowFullScreen
-            />
-          </div>
-        </div>
+export const DigitalFootprintWidget: React.FC<DigitalFootprintWidgetProps> = ({ onClose }) => (
+  <div className="digital-footprint-backdrop" onClick={onClose}>
+    <div className="digital-footprint-widget" onClick={(e) => e.stopPropagation()}>
+      <div className="digital-footprint-titlebar">
+        <button className="digital-footprint-close-btn" onClick={onClose} aria-label="Close" />
+      </div>
+      <div className="digital-footprint-body">
+        <iframe
+          src="https://bl4ckdf.onrender.com"
+          className="digital-footprint-iframe"
+          title="Digital Footprint Tool"
+          allowFullScreen
+        />
       </div>
     </div>
-  );
-};
+  </div>
+);

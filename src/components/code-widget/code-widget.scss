@@ -1,134 +1,68 @@
-.code-widget-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+@use '../_widget-base' as base;
+
+.code-widget-backdrop { @include base.widget-backdrop; }
 
 .code-widget {
-  background: #000000;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  width: 90vw;
-  max-width: 900px;
-  max-height: 85vh;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
 
-  .close-button {
-    position: absolute;
-    top: 12px;
-    right: 60px;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #fff;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0;
-    width: 28px;
-    height: 28px;
+// Titlebar: left side has language label, right side has copy + close dot
+.code-titlebar {
+  @include base.widget-titlebar;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+
+  .code-language-label {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+  }
+
+  .code-titlebar-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-    z-index: 1000;
+    gap: 10px;
+  }
+
+  .code-copy-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+
+    svg { width: 14px; height: 14px; }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.75);
+      background: rgba(255, 255, 255, 0.07);
     }
   }
 }
 
-.code-widget-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+.code-close-btn { @include base.widget-close-btn; }
 
-  .code-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 20px;
-    background: #252526;
-    border-bottom: 1px solid #3c3c3c;
+.code-body {
+  @include base.widget-body;
+  overflow-y: auto;
+  background: #0d0d0d;
 
-    .language-label {
-      color: #e0e0e0;
-      font-size: 14px;
-      font-weight: 500;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    }
+  pre { margin: 0 !important; background: transparent !important; border-radius: 0 !important; }
+  code { font-family: 'Fira Code', 'Consolas', 'Monaco', 'Menlo', monospace !important; }
 
-    .copy-button {
-      background: transparent;
-      border: none;
-      color: #888;
-      cursor: pointer;
-      padding: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 4px;
-      transition: all 0.2s;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-      }
-
-      svg {
-        width: 18px;
-        height: 18px;
-      }
-    }
-  }
-
-  .code-container {
-    flex: 1;
-    overflow: auto;
-    background: #1e1e1e;
-
-    pre {
-      margin: 0 !important;
-      border-radius: 0 !important;
-    }
-
-    code {
-      font-family: 'Fira Code', 'Consolas', 'Monaco', 'Menlo', monospace !important;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .code-widget {
-    width: 98vw;
-    max-height: 90vh;
-    border-radius: 8px;
-  }
-
-  .code-widget-content {
-    .code-header {
-      padding: 10px 16px;
-
-      .language-label {
-        font-size: 13px;
-      }
-    }
-
-    .code-container {
-      pre {
-        font-size: 12px !important;
-      }
-    }
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    &:hover { background: rgba(255, 255, 255, 0.22); }
   }
 }

@@ -1,0 +1,120 @@
+// ─── Shared Widget Base ───────────────────────────────────────────────────────
+// All widgets inherit this OS-window aesthetic:
+//   • Dark charcoal titlebar  (#2a2a2a)
+//   • Near-black content area (#0d0d0d)
+//   • Red circular close dot  (#e84040)
+//   • Rounded corners 10px
+//   • Subtle border           rgba(255,255,255,.07)
+
+// ── Mixin ────────────────────────────────────────────────────────────────────
+@mixin widget-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin widget-shell {
+  position: relative;
+  width: 90vw;
+  max-width: 1000px;
+  height: 80vh;
+  max-height: 800px;
+  background: #0d0d0d;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 32px 64px rgba(0, 0, 0, 0.6),
+    0  8px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@mixin widget-titlebar {
+  flex-shrink: 0;
+  height: 38px;
+  background: #2a2a2a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 12px;
+  user-select: none;
+}
+
+@mixin widget-close-btn {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e84040;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.15s ease, transform 0.1s ease;
+  flex-shrink: 0;
+  font-size: 0; // hide any text/× glyph
+
+  &::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cline x1='1' y1='1' x2='7' y2='7' stroke='rgba(0,0,0,.45)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cline x1='7' y1='1' x2='1' y2='7' stroke='rgba(0,0,0,.45)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  &:hover {
+    filter: brightness(1.15);
+    transform: scale(1.08);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    transform: scale(0.94);
+    filter: brightness(0.9);
+  }
+}
+
+@mixin widget-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+@mixin widget-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+@mixin widget-responsive {
+  @media (max-width: 768px) {
+    width: 98vw;
+    height: 95vh;
+    max-height: unset;
+    border-radius: 10px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+}

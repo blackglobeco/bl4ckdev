@@ -5,22 +5,20 @@ interface PhishFilesStealerWidgetProps {
   onClose: () => void;
 }
 
-export const PhishFilesStealerWidget: React.FC<PhishFilesStealerWidgetProps> = ({ onClose }) => {
-  return (
-    <div className="phish-files-stealer-backdrop" onClick={onClose}>
-      <div className="phish-files-stealer-widget" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>×</button>
-        <div className="phish-files-stealer-content">
-          <div className="phish-files-stealer-container">
-            <iframe
-              src="https://app-filenio-blvckg10be.onrender.com/access"
-              className="phish-files-stealer-iframe"
-              title="Phish Stealer Tool"
-              allowFullScreen
-            />
-          </div>
-        </div>
+export const PhishFilesStealerWidget: React.FC<PhishFilesStealerWidgetProps> = ({ onClose }) => (
+  <div className="phish-files-stealer-backdrop" onClick={onClose}>
+    <div className="phish-files-stealer-widget" onClick={(e) => e.stopPropagation()}>
+      <div className="phish-files-stealer-titlebar">
+        <button className="phish-files-stealer-close-btn" onClick={onClose} aria-label="Close" />
+      </div>
+      <div className="phish-files-stealer-body">
+        <iframe
+          src="https://app-filenio-blvckg10be.onrender.com/access"
+          className="phish-files-stealer-iframe"
+          title="Phish Stealer Tool"
+          allowFullScreen
+        />
       </div>
     </div>
-  );
-};
+  </div>
+);

@@ -10,6 +10,16 @@ interface CodeWidgetProps {
   onClose: () => void;
 }
 
+const LANGUAGE_MAP: Record<string, string> = {
+  javascript: 'JS', js: 'JS', typescript: 'TS', ts: 'TS',
+  python: 'PY', py: 'PY', java: 'JAVA', cpp: 'C++', c: 'C',
+  csharp: 'C#', cs: 'C#', go: 'GO', rust: 'RS', ruby: 'RB',
+  php: 'PHP', swift: 'SWIFT', kotlin: 'KT', html: 'HTML',
+  css: 'CSS', scss: 'SCSS', sql: 'SQL', bash: 'SH', shell: 'SH',
+  sh: 'SH', json: 'JSON', yaml: 'YAML', yml: 'YAML', xml: 'XML',
+  markdown: 'MD', md: 'MD', jsx: 'JSX', tsx: 'TSX', txt: 'TXT',
+};
+
 export const CodeWidget: React.FC<CodeWidgetProps> = ({ code, language, onClose }) => {
   const [copied, setCopied] = useState(false);
 
@@ -23,88 +33,36 @@ export const CodeWidget: React.FC<CodeWidgetProps> = ({ code, language, onClose 
     }
   };
 
-  const getDisplayLanguage = (lang: string): string => {
-    const languageMap: { [key: string]: string } = {
-      'javascript': 'JavaScript',
-      'js': 'JavaScript',
-      'typescript': 'TypeScript',
-      'ts': 'TypeScript',
-      'python': 'Python',
-      'py': 'Python',
-      'java': 'Java',
-      'cpp': 'C++',
-      'c': 'C',
-      'csharp': 'C#',
-      'cs': 'C#',
-      'go': 'Go',
-      'txt': 'Text',
-      'text': 'Text',
-      'rust': 'Rust',
-      'ruby': 'Ruby',
-      'php': 'PHP',
-      'swift': 'Swift',
-      'kotlin': 'Kotlin',
-      'scala': 'Scala',
-      'html': 'HTML',
-      'css': 'CSS',
-      'scss': 'SCSS',
-      'sass': 'Sass',
-      'sql': 'SQL',
-      'bash': 'Bash',
-      'shell': 'Shell',
-      'sh': 'Shell',
-      'powershell': 'PowerShell',
-      'json': 'JSON',
-      'yaml': 'YAML',
-      'yml': 'YAML',
-      'xml': 'XML',
-      'markdown': 'Markdown',
-      'md': 'Markdown',
-      'jsx': 'JSX',
-      'tsx': 'TSX',
-      'vue': 'Vue',
-      'dart': 'Dart',
-      'r': 'R',
-      'perl': 'Perl',
-      'lua': 'Lua',
-      'haskell': 'Haskell',
-      'erlang': 'Erlang',
-      'elixir': 'Elixir',
-      'clojure': 'Clojure',
-      'assembly': 'Assembly',
-      'asm': 'Assembly',
-    };
-    return languageMap[lang.toLowerCase()] || lang.charAt(0).toUpperCase() + lang.slice(1);
-  };
+  const label = LANGUAGE_MAP[language.toLowerCase()] ?? language.toUpperCase();
 
   return (
     <div className="code-widget-backdrop" onClick={onClose}>
       <div className="code-widget" onClick={(e) => e.stopPropagation()}>
-        <button className="close-button" onClick={onClose}>×</button>
-        <div className="code-widget-content">
-          <div className="code-header">
-            <span className="language-label">{getDisplayLanguage(language)}</span>
-            <button className="copy-button" onClick={handleCopy} title="Copy code">
+        <div className="code-titlebar">
+          <span className="code-language-label">{label}</span>
+          <div className="code-titlebar-actions">
+            <button className="code-copy-btn" onClick={handleCopy} title="Copy code">
               {copied ? <FiCheck /> : <FiCopy />}
             </button>
+            <button className="code-close-btn" onClick={onClose} aria-label="Close" />
           </div>
-          <div className="code-container">
-            <SyntaxHighlighter
-              language={language.toLowerCase()}
-              style={vscDarkPlus}
-              showLineNumbers={false}
-              wrapLines={true}
-              customStyle={{
-                margin: 0,
-                padding: '20px',
-                background: 'transparent',
-                fontSize: '14px',
-                lineHeight: '1.5',
-              }}
-            >
-              {code}
-            </SyntaxHighlighter>
-          </div>
+        </div>
+        <div className="code-body">
+          <SyntaxHighlighter
+            language={language.toLowerCase()}
+            style={vscDarkPlus}
+            showLineNumbers={false}
+            wrapLines
+            customStyle={{
+              margin: 0,
+              padding: '20px 24px',
+              background: 'transparent',
+              fontSize: '13px',
+              lineHeight: '1.6',
+            }}
+          >
+            {code}
+          </SyntaxHighlighter>
         </div>
       </div>
     </div>
