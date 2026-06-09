@@ -184,17 +184,87 @@ module.exports = async (req, res) => {
   };
 
   // ── Parse SPF / DMARC from TXT records ────────────────────────────────────
-  const analyseEmailSecurity = (txtRecords, domain) => {
-    if (!txtRecords) return undefined;
-    const flat = txtRecords.map(t => t.replace(/^"|"$/g, '').trim());
-    const spf    = flat.find(t => t.startsWith('v=spf1'));
-    const dmarc  = flat.find(t => t.startsWith('v=DMARC1'));
+  // txtRecords      = apex domain TXT records (SPF lives here)
+  // dmarcTxtRecords = _dmarc.<domain> TXT records (DMARC lives here per RFC 7489)
+  const analyseEmailSecurity = (txtRecords, dmarcTxtRecords) => {
+    if (!txtRecords && !dmarcTxtRecords) return undefined;
+    const flat      = (txtRecords      || []).map(t => t.replace(/^"|"$/g, '').trim());
+    const flatDmarc = (dmarcTxtRecords || []).map(t => t.replace(/^"|"$/g, '').trim());
+    // SPF always on apex domain TXT
+    const spf   = flat.find(t => t.startsWith('v=spf1')) ?? null;
+    // DMARC always at _dmarc.<domain> — fall back to apex TXT just in case
+    const dmarc = flatDmarc.find(t => t.startsWith('v=DMARC1'))
+               ?? flat.find(t => t.startsWith('v=DMARC1'))
+               ?? null;
+
+    // ── SPF strength — inspect the all-qualifier ──────────────────────────
+    // -all = hard fail (strict)  ~all = soft fail (weak)
+    // ?all = neutral             +all = pass all (open relay)
+    let spfStrength = 'none';
+    if (spf) {
+      if      (/-all/i.test(spf))  spfStrength = 'hard_fail';
+      else if (/~all/i.test(spf))  spfStrength = 'soft_fail';
+      else if (/[?]all/i.test(spf)) spfStrength = 'neutral';
+      else if (/[+]all/i.test(spf)) spfStrength = 'pass_all';
+      else                          spfStrength = 'unknown';
+    }
+
+    // ── DMARC policy — p= tag is the enforcement gate ─────────────────────
+    // p=reject / p=quarantine = enforced   p=none = monitor only (still spoofable)
+    let dmarcPolicy = 'none';
+    if (dmarc) {
+      const m = dmarc.match(/p=(none|quarantine|reject)/i);
+      dmarcPolicy = m ? m[1].toLowerCase() : 'none';
+    }
+
+    // Optional DMARC sub-tags
+    const dmarcPct   = (dmarc && dmarc.match(/pct=(\d+)/i))?.[1]                          ?? null;
+    const dmarcSp    = (dmarc && dmarc.match(/sp=(none|quarantine|reject)/i))?.[1]?.toLowerCase() ?? null;
+    const dmarcRua   = (dmarc && dmarc.match(/rua=([^;]+)/i))?.[1]?.trim()                 ?? null;
+    const dmarcAdkim = (dmarc && dmarc.match(/adkim=([rs])/i))?.[1]?.toLowerCase()         ?? null;
+    const dmarcAspf  = (dmarc && dmarc.match(/aspf=([rs])/i))?.[1]?.toLowerCase()          ?? null;
+
+    // ── Spoofability verdict ───────────────────────────────────────────────
+    // DMARC with p=quarantine/reject protects the apex domain.
+    // sp= controls subdomains — if explicitly set to sp=none, subdomains are
+    // unprotected even if apex p= is enforced. If sp= is absent, subdomains
+    // inherit the apex p= policy (RFC 7489). Both must be enforced to be safe.
+    const spfStrong = !!spf && spfStrength === 'hard_fail';
+
+    // Apex domain enforcement
+    const dmarcApexStrong = !!dmarc && ['quarantine', 'reject'].includes(dmarcPolicy);
+
+    // Subdomain enforcement — inherit apex p= if sp= not explicitly set
+    const dmarcSpPolicy  = dmarcSp ?? dmarcPolicy;
+    const dmarcSubStrong = ['quarantine', 'reject'].includes(dmarcSpPolicy);
+
+    // Both apex AND subdomains must be enforced to be truly protected
+    const dmarcStrong = dmarcApexStrong && dmarcSubStrong;
+    const spoofable   = !dmarcStrong;
+
+    let spoofReason = '';
+    if (!spf)            spoofReason += 'No SPF record. ';
+    else if (!spfStrong) spoofReason += 'SPF uses "' + spfStrength + '" — weak. ';
+    if (!dmarc) {
+      spoofReason += 'No DMARC record. ';
+    } else if (!dmarcApexStrong) {
+      spoofReason += 'DMARC apex policy is "' + dmarcPolicy + '" — not enforced. ';
+    } else if (!dmarcSubStrong) {
+      spoofReason += 'DMARC subdomain policy (sp=' + dmarcSpPolicy + ') — subdomains unprotected. ';
+    }
+
     return {
-      spf:          spf    ?? null,
-      spfValid:     !!spf,
-      dmarc:        dmarc  ?? null,
-      dmarcValid:   !!dmarc,
-      mxConfigured: true,  // we already confirmed MX exists
+      spf,             spfValid:       !!spf,   spfStrength,     spfStrong,
+      dmarc,           dmarcValid:     !!dmarc, dmarcPolicy,     dmarcStrong,
+      dmarcApexStrong, dmarcSubStrong, dmarcSpPolicy,
+      dmarcPct:        dmarcPct   ?? undefined,
+      dmarcSp:         dmarcSp    ?? undefined,
+      dmarcRua:        dmarcRua   ?? undefined,
+      dmarcAdkim:      dmarcAdkim ?? undefined,
+      dmarcAspf:       dmarcAspf  ?? undefined,
+      spoofable,
+      spoofReason:     spoofReason.trim() || null,
+      mxConfigured:    true,
     };
   };
 
@@ -219,7 +289,7 @@ module.exports = async (req, res) => {
 
   try {
     // ── Phase 1: DNS + SSL + headers in parallel ─────────────────────────
-    const [dnsA, dnsAAAA, dnsMX, dnsNS, dnsTXT, dnsCNAME, dnsSOA, headerResult, sslDirect] = await Promise.all([
+    const [dnsA, dnsAAAA, dnsMX, dnsNS, dnsTXT, dnsCNAME, dnsSOA, headerResult, sslDirect, dnsDMARC] = await Promise.all([
       fetchDNS(clean, 'A'),
       fetchDNS(clean, 'AAAA'),
       fetchDNS(clean, 'MX'),
@@ -229,6 +299,8 @@ module.exports = async (req, res) => {
       fetchDNS(clean, 'SOA'),
       fetchHeaders(clean),
       fetchSSLDirect(clean),
+      // DMARC lives at _dmarc.<domain> per RFC 7489 — NOT on the apex TXT records
+      fetchDNS(`_dmarc.${clean}`, 'TXT'),
     ]);
 
     const aRecords     = parseDNS(dnsA);
@@ -238,6 +310,8 @@ module.exports = async (req, res) => {
     const txtRecords   = parseDNS(dnsTXT);
     const cnameRecords = parseDNS(dnsCNAME);
     const soaRecords   = parseDNS(dnsSOA);
+    // DMARC records from _dmarc subdomain
+    const dmarcRecords = parseDNS(dnsDMARC);
 
     const resolvedIP = aRecords?.[0] ?? clean;
 
@@ -353,7 +427,7 @@ module.exports = async (req, res) => {
     }
 
     // Email security (SPF / DMARC)
-    const emailSec = analyseEmailSecurity(txtRecords, clean);
+    const emailSec = analyseEmailSecurity(txtRecords, dmarcRecords);
     if (emailSec) merged.emailSecurity = emailSec;
 
     // Carbon footprint estimate (based on page transfer size heuristic)
