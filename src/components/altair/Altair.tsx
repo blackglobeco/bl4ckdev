@@ -1151,20 +1151,87 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
     }
     if (data.emailSecurity) {
       const em = data.emailSecurity;
-      lines.push(`SPF record: ${em.spfValid ? em.spf : 'NOT CONFIGURED — email spoofing risk'}.`);
-      lines.push(`DMARC record: ${em.dmarcValid ? em.dmarc : 'NOT CONFIGURED — phishing risk'}.`);
+      // SPF
+      if (em.spfValid) {
+        lines.push(`SPF record: present, strength is "${em.spfStrength}" (${em.spfStrong ? 'strict — hard fail' : 'weak — not strict'}).`);
+      } else {
+        lines.push(`SPF record: NOT CONFIGURED — anyone can send email as this domain.`);
+      }
+      // DMARC
+      if (em.dmarcValid) {
+        lines.push(`DMARC record: present, policy is "${em.dmarcPolicy}" (${em.dmarcStrong ? 'enforced' : 'NOT enforced — spoofing still possible'}).`);
+        if (em.dmarcPct && em.dmarcPct !== '100') lines.push(`DMARC applies to only ${em.dmarcPct}% of messages.`);
+        if (em.dmarcSp)    lines.push(`DMARC subdomain policy: ${em.dmarcSp}.`);
+        if (em.dmarcRua)   lines.push(`DMARC aggregate reports sent to: ${em.dmarcRua}.`);
+        if (em.dmarcAdkim) lines.push(`DKIM alignment: ${em.dmarcAdkim === 'r' ? 'relaxed' : 'strict'}.`);
+        if (em.dmarcAspf)  lines.push(`SPF alignment: ${em.dmarcAspf === 'r' ? 'relaxed' : 'strict'}.`);
+      } else {
+        lines.push(`DMARC record: NOT CONFIGURED — no enforcement policy, domain can be spoofed.`);
+      }
+      // Final verdict — NO nested template literals (avoids TSX compiler bug)
+      const spoofVerdict = em.spoofable
+        ? ('YES — ' + (em.spoofReason ?? 'domain is not protected'))
+        : 'NO — domain is protected against email spoofing';
+      lines.push(`Email spoofable: ${spoofVerdict}.`);
     }
     if (data.subdomains?.total > 0) {
-      lines.push(`Subdomains found: ${data.subdomains.total} total.`);
-      const activeList = data.subdomains.list.filter((s: any) => s.expired === false);
-      if (activeList.length) lines.push(`Active subdomains: ${activeList.map((s: any) => s.subdomain).join(', ')}.`);
+      const sub = data.subdomains;
+      lines.push(`Subdomains found: ${sub.total} total (${sub.active ?? 0} with valid SSL, ${sub.expired ?? 0} with expired SSL).`);
+
+      // Sources breakdown — tells the AI which scanners contributed
+      if (sub.sources) {
+        const srcParts: string[] = [];
+        if (sub.sources.crtsh        > 0) srcParts.push(`${sub.sources.crtsh} from certificate logs`);
+        if (sub.sources.hackertarget > 0) srcParts.push(`${sub.sources.hackertarget} from HackerTarget`);
+        if (srcParts.length) lines.push(`Sources: ${srcParts.join(', ')}.`);
+      }
+
+      // Include ALL subdomains — not just those with expired===false.
+      // HackerTarget entries have expired===undefined (no cert data), so
+      // the old strict `=== false` filter silently dropped them all.
+      const list: any[] = sub.list ?? [];
+
+      // Subdomains with a confirmed active SSL cert
+      const certActive = list.filter((s: any) => s.expired === false);
+      if (certActive.length) {
+        lines.push(`Active SSL subdomains: ${certActive.map((s: any) => s.subdomain).join(', ')}.`);
+      }
+
+      // Subdomains found by HackerTarget (no cert info — expired is undefined)
+      const noCertList = list.filter((s: any) => s.expired === undefined);
+      if (noCertList.length) {
+        // Report with IP where available
+        const formatted = noCertList.map((s: any) =>
+          s.ip ? `${s.subdomain} (${s.ip})` : s.subdomain
+        ).join(', ');
+        lines.push(`Additional subdomains (DNS-confirmed, no cert data): ${formatted}.`);
+      }
+
+      // Subdomains with expired SSL certs — still worth reporting
+      const certExpired = list.filter((s: any) => s.expired === true);
+      if (certExpired.length) {
+        lines.push(`Expired SSL subdomains: ${certExpired.map((s: any) => s.subdomain).join(', ')}.`);
+      }
+    } else {
+      lines.push(`No subdomains discovered.`);
     }
     const vulns: string[] = [];
     if (data.ssl?.valid === false)                       vulns.push('CRITICAL: SSL certificate expired or invalid.');
     if (data.securityHeaders && !data.securityHeaders.hsts) vulns.push('HIGH: HSTS not set — MITM downgrade risk.');
     if (data.securityHeaders && !data.securityHeaders.csp)  vulns.push('HIGH: CSP missing — XSS vulnerability.');
-    if (data.emailSecurity && !data.emailSecurity.spfValid)  vulns.push('HIGH: No SPF — email spoofing risk.');
-    if (data.emailSecurity && !data.emailSecurity.dmarcValid) vulns.push('HIGH: No DMARC — phishing risk.');
+    if (data.emailSecurity) {
+      const emv = data.emailSecurity;
+      if (!emv.spfValid) {
+        vulns.push('HIGH: No SPF record — anyone can send email claiming to be this domain.');
+      } else if (!emv.spfStrong) {
+        vulns.push('MEDIUM: SPF present but weak (' + emv.spfStrength + ') — consider using -all.');
+      }
+      if (!emv.dmarcValid) {
+        vulns.push('HIGH: No DMARC record — no enforcement policy, domain is spoofable.');
+      } else if (!emv.dmarcStrong) {
+        vulns.push('HIGH: DMARC present but policy is "' + emv.dmarcPolicy + '" — not enforced, domain still spoofable.');
+      }
+    }
     if (vulns.length > 0) {
       lines.push(`Security issues: ${vulns.join(' ')}`);
     } else {
