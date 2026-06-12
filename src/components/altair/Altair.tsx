@@ -25,6 +25,7 @@ interface AltairProps {
   onShowCyberThreatMap: () => void;
   onShowWorldMonitorMap: () => void;
   onShowEmailSpoofer: () => void;
+  onShowCallSpoofer: () => void; // Added for Call Spoofer widget
   onShowCreditCard: () => void;
   onShowBitcoinPrivkey: () => void;
   onShowPhotoGeo: () => void;
@@ -114,6 +115,16 @@ const worldMonitorDeclaration: FunctionDeclaration = {
 const emailSpooferDeclaration: FunctionDeclaration = {
   name: "show_email_spoofer",
   description: "Display the email spoofer tool widget when user asks about email spoofing, phishing, or testing email security",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {},
+    required: []
+  }
+};
+
+const callSpooferDeclaration: FunctionDeclaration = {
+  name: "show_call_spoofer",
+  description: "Display the call spoofer tool widget when user asks to spoof a call, make a spoofed call, fake caller ID, or disguise a phone number during a call.",
   parameters: {
     type: Type.OBJECT,
     properties: {},
@@ -430,18 +441,6 @@ const webCheckDeclaration: FunctionDeclaration = {
 };
 
 // ── OpenMeasures Social Search declaration ────────────────────────────────────
-// Exact API site parameter values from:
-// https://docs.openmeasures.io/docs/guides/sources
-// Full enum confirmed from API docs (28 values):
-//   tiktok       → tiktok_comment   (or tiktok_video)
-//   bitchute     → bitchute_comment (or bitchute_video)
-//   lbry/odysee  → lbry_comment     (or lbry_video)
-//   rumble       → rumble_comment   (or rumble_video)
-//   rutube       → rutube_comment   (or rutube_video)
-//   truth social → truth_social
-//   scored       → win
-//   whatsapp     → whatsapp
-//   kiwifarms    → kiwifarms
 const socialSearchDeclaration: FunctionDeclaration = {
   name: "search_social_media_openmeasures",
   description:
@@ -619,8 +618,6 @@ const fetchCensysIPData = async (ipAddress: string): Promise<string> => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── OpenMeasures social search helper ────────────────────────────────────────
-// Content field mapping per platform — from official docs:
-// https://docs.openmeasures.io/docs/guides/sources
 const CONTENT_FIELD_MAP: Record<string, string> = {
   '4chan':            'htmlparsedcom',
   '8kun':            'htmlparsedcom',
@@ -652,7 +649,6 @@ const CONTENT_FIELD_MAP: Record<string, string> = {
   'wimkin':          'content',
 };
 
-// Username field mapping per platform
 const USERNAME_FIELD_MAP: Record<string, string> = {
   '4chan':            'name',
   '8kun':            'name',
@@ -684,8 +680,6 @@ const USERNAME_FIELD_MAP: Record<string, string> = {
   'wimkin':          'author_username',
 };
 
-// Direct URL field mapping — platforms that store a ready-made URL in the doc
-// Source: https://docs.openmeasures.io/docs/guides/sources
 const DIRECT_URL_FIELD_MAP: Record<string, string> = {
   'bluesky':         'uri',
   'bitchute_video':  'meta.url',
@@ -700,7 +694,6 @@ const DIRECT_URL_FIELD_MAP: Record<string, string> = {
   'wimkin':          'permalink',
 };
 
-// Safely get a nested field value from an object using dot notation
 function getNestedField(obj: Record<string, unknown>, dotPath: string): string {
   const parts = dotPath.split('.');
   let current: unknown = obj;
@@ -711,18 +704,13 @@ function getNestedField(obj: Record<string, unknown>, dotPath: string): string {
   return current != null ? String(current) : '';
 }
 
-// Build a source post URL from the raw _source document.
-// Platforms that store a direct URL field are read from DIRECT_URL_FIELD_MAP.
-// Platforms with constructed URLs are built from IDs per the official docs.
 function buildPostUrl(site: string, s: Record<string, unknown>): string {
-  // 1. Try direct URL field first
   const directField = DIRECT_URL_FIELD_MAP[site];
   if (directField) {
     const directUrl = getNestedField(s, directField);
     if (directUrl && directUrl.startsWith('http')) return directUrl;
   }
 
-  // 2. Constructed URLs — pattern from official docs
   switch (site) {
     case '4chan': {
       const board = String(s.board ?? '');
@@ -762,7 +750,6 @@ function buildPostUrl(site: string, s: Record<string, unknown>): string {
       break;
     }
     case 'rumble_comment': {
-      // No reliable constructed URL; best effort from video_id
       const vid = String(s.video_id ?? s.video_url ?? '');
       if (vid.startsWith('http')) return vid;
       break;
@@ -774,7 +761,6 @@ function buildPostUrl(site: string, s: Record<string, unknown>): string {
       break;
     }
     case 'win': {
-      // Scored / Win Communities
       const community = String(s.community ?? '');
       const uuid      = String(s.uuid ?? '');
       const datatype  = String(s.datatype ?? 'post');
@@ -812,7 +798,6 @@ function buildPostUrl(site: string, s: Record<string, unknown>): string {
     }
   }
 
-  // 3. Absolute last resort — check if the doc has any 'url' or 'link' field
   const fallback = String(s.url ?? s.link ?? s.permalink ?? s.post_url ?? '');
   if (fallback.startsWith('http')) return fallback;
 
@@ -830,7 +815,7 @@ const fetchOpenMeasures = async (
 
     const params = new URLSearchParams({
       term,
-      site,           // proxy handles alias resolution
+      site,
       limit:     String(safeLimit),
       querytype,
     });
@@ -851,7 +836,6 @@ const fetchOpenMeasures = async (
 
     const data = await response.json();
 
-    // resolved_site is injected by the proxy after alias normalisation
     const resolvedSite: string = data._resolved_site ?? site;
     const hits: { _source: Record<string, unknown> }[] = data?.hits?.hits ?? [];
 
@@ -867,7 +851,6 @@ const fetchOpenMeasures = async (
     const summaries = hits.map((hit, i) => {
       const s = hit._source as Record<string, unknown>;
 
-      // Use the authoritative field first, then fall back to common alternatives
       const body = (getNestedField(s, contentField) ||
         String(s.message ?? s.body ?? s.text ?? s.content ?? s.txt ??
                s.comment ?? s.selftext ?? s.post ?? s.description ?? ""))
@@ -877,14 +860,12 @@ const fetchOpenMeasures = async (
       const author = (getNestedField(s, usernameField) ||
         String(s.username ?? s.author ?? s.from_name ?? s.user ?? s.screen_name ?? "unknown"));
 
-      // Channel / board context
       const channel = String(
         s.channelusername ?? s.channeltitle ?? s.board ?? s.subreddit ??
         s.community ?? s.sub ?? s.site ?? ""
       );
       const channelPart = channel ? ` in ${channel}` : "";
 
-      // Timestamp
       const rawDate = s.date ?? s.created_utc ?? s.datetime ?? s.timestamp ?? s.time ?? "";
       let dateStr = "unknown date";
       if (rawDate) {
@@ -1151,13 +1132,11 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
     }
     if (data.emailSecurity) {
       const em = data.emailSecurity;
-      // SPF
       if (em.spfValid) {
         lines.push(`SPF record: present, strength is "${em.spfStrength}" (${em.spfStrong ? 'strict — hard fail' : 'weak — not strict'}).`);
       } else {
         lines.push(`SPF record: NOT CONFIGURED — anyone can send email as this domain.`);
       }
-      // DMARC
       if (em.dmarcValid) {
         lines.push(`DMARC record: present, policy is "${em.dmarcPolicy}" (${em.dmarcStrong ? 'enforced' : 'NOT enforced — spoofing still possible'}).`);
         if (em.dmarcPct && em.dmarcPct !== '100') lines.push(`DMARC applies to only ${em.dmarcPct}% of messages.`);
@@ -1168,7 +1147,6 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
       } else {
         lines.push(`DMARC record: NOT CONFIGURED — no enforcement policy, domain can be spoofed.`);
       }
-      // Final verdict — NO nested template literals (avoids TSX compiler bug)
       const spoofVerdict = em.spoofable
         ? ('YES — ' + (em.spoofReason ?? 'domain is not protected'))
         : 'NO — domain is protected against email spoofing';
@@ -1178,7 +1156,6 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
       const sub = data.subdomains;
       lines.push(`Subdomains found: ${sub.total} total (${sub.active ?? 0} with valid SSL, ${sub.expired ?? 0} with expired SSL).`);
 
-      // Sources breakdown — tells the AI which scanners contributed
       if (sub.sources) {
         const srcParts: string[] = [];
         if (sub.sources.crtsh        > 0) srcParts.push(`${sub.sources.crtsh} from certificate logs`);
@@ -1186,28 +1163,21 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
         if (srcParts.length) lines.push(`Sources: ${srcParts.join(', ')}.`);
       }
 
-      // Include ALL subdomains — not just those with expired===false.
-      // HackerTarget entries have expired===undefined (no cert data), so
-      // the old strict `=== false` filter silently dropped them all.
       const list: any[] = sub.list ?? [];
 
-      // Subdomains with a confirmed active SSL cert
       const certActive = list.filter((s: any) => s.expired === false);
       if (certActive.length) {
         lines.push(`Active SSL subdomains: ${certActive.map((s: any) => s.subdomain).join(', ')}.`);
       }
 
-      // Subdomains found by HackerTarget (no cert info — expired is undefined)
       const noCertList = list.filter((s: any) => s.expired === undefined);
       if (noCertList.length) {
-        // Report with IP where available
         const formatted = noCertList.map((s: any) =>
           s.ip ? `${s.subdomain} (${s.ip})` : s.subdomain
         ).join(', ');
         lines.push(`Additional subdomains (DNS-confirmed, no cert data): ${formatted}.`);
       }
 
-      // Subdomains with expired SSL certs — still worth reporting
       const certExpired = list.filter((s: any) => s.expired === true);
       if (certExpired.length) {
         lines.push(`Expired SSL subdomains: ${certExpired.map((s: any) => s.subdomain).join(', ')}.`);
@@ -1244,7 +1214,7 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
-function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
+function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
   const [jsonString, setJSONString] = useState<string>("");
   const { client, setConfig, setModel } = useLiveAPIContext();
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -1307,6 +1277,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [cyberThreatDeclaration] },
         { functionDeclarations: [worldMonitorDeclaration] },
         { functionDeclarations: [emailSpooferDeclaration] },
+        { functionDeclarations: [callSpooferDeclaration] },
         { functionDeclarations: [creditCardDeclaration] },
         { functionDeclarations: [bitcoinPrivkeyDeclaration] },
         { functionDeclarations: [currentLocationDeclaration] },
@@ -1358,6 +1329,8 @@ In order to ask Black AI a question, the user must give the prompt in the conver
           onShowWorldMonitorMap();
         } else if (name === emailSpooferDeclaration.name) {
           onShowEmailSpoofer();
+        } else if (name === callSpooferDeclaration.name) {
+          onShowCallSpoofer();
         } else if (name === blackEyesDeclaration.name) {
           onShowBlackEyes();
         } else if (name === creditCardDeclaration.name) {
@@ -1528,6 +1501,8 @@ In order to ask Black AI a question, the user must give the prompt in the conver
                     ? `World Monitor Map widget opened.`
                     : fc.name === emailSpooferDeclaration.name
                     ? `Email Spoofer widget opened.`
+                    : fc.name === callSpooferDeclaration.name
+                    ? `Call Spoofer widget opened.`
                     : fc.name === blackEyesDeclaration.name
                     ? `Black Eyes widget opened.`
                     : fc.name === creditCardDeclaration.name
@@ -1588,7 +1563,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
     client.off("toolcall", onToolCall);
     client.on("toolcall", onToolCall);
     return () => { client.off("toolcall", onToolCall); };
-  }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
+  }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
 
   const embedRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

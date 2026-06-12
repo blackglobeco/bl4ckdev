@@ -13,9 +13,9 @@ export const AndroidSpywareWidget: React.FC<AndroidSpywareWidgetProps> = ({ onCl
       </div>
       <div className="android-spyware-body">
         <iframe
-          src="https://bl4ck-as.vercel.app/"
+          src="https://black2637643-7799273.vercel.app/"
           className="android-spyware-iframe"
-          title="Android Spyware Tool"
+          title="Android Spyware"
           allowFullScreen
         />
       </div>

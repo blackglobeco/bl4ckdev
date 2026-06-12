@@ -13,9 +13,9 @@ export const EmailSpooferWidget: React.FC<EmailSpooferWidgetProps> = ({ onClose 
       </div>
       <div className="email-spoofer-body">
         <iframe
-          src="https://bl4ck-mail.vercel.app/"
+          src="https://black25245-8766337.vercel.app/"
           className="email-spoofer-iframe"
-          title="Email Spoofer Tool"
+          title="Email Spoofer"
           allowFullScreen
         />
       </div>

@@ -26,6 +26,7 @@ import { YouTubeWidget } from "./components/youtube-widget/YouTubeWidget";
 import { CyberThreatMapWidget } from "./components/cyber-threat-map/CyberThreatMapWidget";
 import { WorldMonitorMapWidget } from "./components/world-monitor-map/WorldMonitorMapWidget";
 import { EmailSpooferWidget } from "./components/email-spoofer-widget/EmailSpooferWidget";
+import { CallSpooferWidget } from "./components/call-spoofer-widget/CallSpooferWidget";
 import { AndroidSpywareWidget } from './components/android-spyware-widget/AndroidSpywareWidget';
 import { CreditCardWidget } from "./components/credit-card-widget/CreditCardWidget";
 import { BitcoinPrivkeyWidget } from "./components/bitcoin-privkey-widget/BitcoinPrivkeyWidget";
@@ -78,6 +79,8 @@ function App() {
   const [showWorldMonitorWidget, setShowWorldMonitorWidget] = useState<boolean>(false);
   // email spoofer widget state
   const [showEmailSpooferWidget, setShowEmailSpooferWidget] = useState<boolean>(false);
+  // call spoofer widget state
+  const [showCallSpooferWidget, setShowCallSpooferWidget] = useState<boolean>(false);
   // credit card widget state
   const [showCreditCardWidget, setShowCreditCardWidget] = useState<boolean>(false);
   // bitcoin privkey widget state
@@ -124,6 +127,7 @@ function App() {
     setShowCyberThreatWidget(false);
     setShowWorldMonitorWidget(false);
     setShowEmailSpooferWidget(false);
+    setShowCallSpooferWidget(false);
     setShowCreditCardWidget(false);
     setShowBitcoinPrivkeyWidget(false);
     setShowPhotoGeoWidget(false);
@@ -217,6 +221,12 @@ function App() {
                   closeAllWidgets();
                   setTimeout(() => {
                     setShowEmailSpooferWidget(true);
+                  }, 100);
+                }}
+                onShowCallSpoofer={() => {
+                  closeAllWidgets();
+                  setTimeout(() => {
+                    setShowCallSpooferWidget(true);
                   }, 100);
                 }}
                 onShowAndroidSpyware={() => {
@@ -378,6 +388,12 @@ function App() {
 
         {showEmailSpooferWidget && (
           <EmailSpooferWidget
+            onClose={closeAllWidgets}
+          />
+        )}
+
+        {showCallSpooferWidget && (
+          <CallSpooferWidget
             onClose={closeAllWidgets}
           />
         )}

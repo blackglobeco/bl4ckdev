@@ -13,9 +13,9 @@ export const DigitalFootprintWidget: React.FC<DigitalFootprintWidgetProps> = ({ 
       </div>
       <div className="digital-footprint-body">
         <iframe
-          src="https://bl4ckdf.onrender.com"
+          src="https://blackai-df.onrender.com"
           className="digital-footprint-iframe"
-          title="Digital Footprint Tool"
+          title="Digital Footprint"
           allowFullScreen
         />
       </div>

@@ -13,9 +13,9 @@ export const BitchatTrackerWidget: React.FC<BitchatTrackerWidgetProps> = ({ onCl
       </div>
       <div className="bitchat-tracker-body">
         <iframe
-          src="https://b1tch4t-tracker.vercel.app/"
+          src="https://black2482428-8722537.vercel.app/"
           className="bitchat-tracker-iframe"
-          title="BitChat Tracker Tool"
+          title="BitChat Tracker"
           allow="bluetooth; camera; microphone; geolocation; usb; serial; hid"
           allowFullScreen
         />

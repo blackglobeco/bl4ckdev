@@ -13,9 +13,9 @@ export const PhotoGeoWidget: React.FC<PhotoGeoWidgetProps> = ({ onClose }) => (
       </div>
       <div className="photo-geo-body">
         <iframe
-          src="https://bl4ck-gs.vercel.app/"
+          src="https://black74686-436-56228466.vercel.app/"
           className="photo-geo-iframe"
-          title="Photo Geo Location Tool"
+          title="Photo Geo Location"
           allowFullScreen
         />
       </div>

@@ -13,7 +13,7 @@ export const BitcoinPrivkeyWidget: React.FC<BitcoinPrivkeyWidgetProps> = ({ onCl
       </div>
       <div className="bitcoin-privkey-body">
         <iframe
-          src="https://btcprivkeydb.onrender.com/page/"
+          src="https://blackai-btcpkdb.onrender.com/page/"
           className="bitcoin-privkey-iframe"
           title="Bitcoin Private Keys Database"
           allowFullScreen
