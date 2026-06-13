@@ -1125,10 +1125,27 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
       if (dns.NS?.length) lines.push(`Name servers: ${dns.NS.join(', ')}.`);
     }
     if (data.openPorts?.length) lines.push(`Open ports: ${data.openPorts.join(', ')}.`);
+    if (data.technologies?.length) lines.push(`Detected technologies: ${data.technologies.join(', ')}.`);
+    if (data.homepage) {
+      const hp = data.homepage;
+      if (hp.title) lines.push(`Page title: "${hp.title}".`);
+      if (hp.generator) lines.push(`CMS/generator meta tag: ${hp.generator}.`);
+      if (hp.externalDomainCount > 0) {
+        lines.push(`Page loads resources from ${hp.externalDomainCount} external domain(s): ${hp.externalDomains.slice(0, 10).join(', ')}.`);
+      }
+    }
+    if (data.certTransparency) {
+      const ct = data.certTransparency;
+      lines.push(`Certificate transparency logs: ${ct.totalCertificates} certificate(s) issued, ${ct.uniqueNames} unique hostname(s) seen.`);
+      if (ct.subdomainCount > 0) {
+        lines.push(`Subdomains seen in cert logs: ${ct.sampleSubdomains.join(', ')}${ct.subdomainCount > ct.sampleSubdomains.length ? ' (and more)' : ''}.`);
+      }
+    }
     if (data.securityHeaders) {
       const sh = data.securityHeaders;
       lines.push(`HSTS: ${sh.hsts ? 'enabled' : 'NOT SET'}.`);
       lines.push(`Content Security Policy: ${sh.csp ? 'set' : 'NOT SET'}.`);
+      lines.push(`Clickjacking protection (X-Frame-Options / frame-ancestors): ${sh.clickjackingProtected ? 'present' : 'MISSING'}.`);
     }
     if (data.emailSecurity) {
       const em = data.emailSecurity;
@@ -1189,6 +1206,7 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
     if (data.ssl?.valid === false)                       vulns.push('CRITICAL: SSL certificate expired or invalid.');
     if (data.securityHeaders && !data.securityHeaders.hsts) vulns.push('HIGH: HSTS not set — MITM downgrade risk.');
     if (data.securityHeaders && !data.securityHeaders.csp)  vulns.push('HIGH: CSP missing — XSS vulnerability.');
+    if (data.securityHeaders && !data.securityHeaders.clickjackingProtected) vulns.push('MEDIUM: No clickjacking protection (X-Frame-Options/frame-ancestors missing) — site can be embedded in a malicious iframe.');
     if (data.emailSecurity) {
       const emv = data.emailSecurity;
       if (!emv.spfValid) {
