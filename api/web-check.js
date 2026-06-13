@@ -66,6 +66,44 @@ module.exports = async (req, res) => {
     request.end();
   });
 
+  // ── Certificate Transparency log lookup (CertSpotter) ─────────────────────
+  const fetchCertSpotter = (domainName) =>
+    fetchJSON(`https://api.certspotter.com/v1/issuances?domain=${encodeURIComponent(domainName)}&include_subdomains=true&expand=dns_names`, {}, 8000);
+
+  // ── Parse homepage HTML for title, generator meta tag, and links ──────────
+  const analyseHomepage = (htmlResult, clean) => {
+    if (!htmlResult?.text) return undefined;
+    const html = htmlResult.text;
+
+    const title = (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || '').trim().slice(0, 200) || undefined;
+
+    const generator = (html.match(/<meta[^>]+name=["']generator["'][^>]+content=["']([^"']+)["']/i)?.[1]
+                    ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']generator["']/i)?.[1])
+                    ?.trim() || undefined;
+
+    // Grab absolute links (href + src), dedupe, split into internal vs external
+    const hrefMatches = [...html.matchAll(/(?:href|src)=["'](https?:\/\/[^"']+)["']/gi)].map(m => m[1]);
+    const seen = new Set();
+    const externalLinks = [];
+    for (const link of hrefMatches) {
+      try {
+        const host = new URL(link).hostname.toLowerCase();
+        if (host === clean || host.endsWith(`.${clean}`)) continue; // skip same-site
+        if (seen.has(host)) continue;
+        seen.add(host);
+        externalLinks.push(host);
+      } catch { /* ignore malformed URLs */ }
+    }
+
+    return {
+      title,
+      generator,
+      externalDomains: externalLinks.slice(0, 25),
+      externalDomainCount: externalLinks.length,
+      htmlSnippet: html.slice(0, 500),
+    };
+  };
+
   // ── DNS over HTTPS (Cloudflare) ───────────────────────────────────────────
   const fetchDNS = (name, type) =>
     fetchJSON(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`, { Accept: 'application/dns-json' });
@@ -278,6 +316,9 @@ module.exports = async (req, res) => {
       csp:               !!h['content-security-policy'],
       cspValue:          h['content-security-policy']    ?? undefined,
       xFrameOptions:     h['x-frame-options']            ?? undefined,
+      // Clickjacking: page is protected if X-Frame-Options is set,
+      // OR the CSP defines a frame-ancestors directive
+      clickjackingProtected: !!(h['x-frame-options'] || /frame-ancestors/i.test(h['content-security-policy'] || '')),
       xContentTypeOpts:  h['x-content-type-options']     ?? undefined,
       referrerPolicy:    h['referrer-policy']             ?? undefined,
       permissionsPolicy: h['permissions-policy']         ?? undefined,
@@ -315,13 +356,15 @@ module.exports = async (req, res) => {
 
     const resolvedIP = aRecords?.[0] ?? clean;
 
-    // ── Phase 2: Geo + WHOIS + robots + sitemap + ports in parallel ────────
-    const [geoData, whoisData, robotsResult, sitemapResult, openPorts] = await Promise.all([
+    // ── Phase 2: Geo + WHOIS + robots + sitemap + ports + CT log + homepage ──
+    const [geoData, whoisData, robotsResult, sitemapResult, openPorts, certSpotterResult, homepageResult] = await Promise.all([
       fetchGeo(resolvedIP),
       fetchWHOIS(clean),
       fetchText(`https://${clean}/robots.txt`),
       fetchText(`https://${clean}/sitemap.xml`),
       scanPorts(clean, [21, 22, 25, 80, 443, 3306, 3389, 8080, 8443, 8888]),
+      fetchCertSpotter(clean),
+      fetchText(`https://${clean}/`),
     ]);
 
     // ── Build response ────────────────────────────────────────────────────
@@ -402,6 +445,35 @@ module.exports = async (req, res) => {
     if ((hdr.link||'').includes('_next')) tech.add('Next.js');
     if ((hdr.link||'').includes('wp-content')) tech.add('WordPress');
     if ((hdr['x-middleware-rewrite'])) tech.add('Next.js Middleware');
+
+    // Homepage analysis (title, generator, external links) — computed early for tech detection
+    const homepage = analyseHomepage(homepageResult, clean);
+
+    // Technologies (from homepage HTML — meta generator + common CMS/framework markers)
+    const html = homepageResult?.text || '';
+    if (homepage?.generator) tech.add(homepage.generator);
+    const htmlSignatures = [
+      [/wp-content|wp-includes/i,            'WordPress'],
+      [/cdn\.shopify\.com|Shopify\.theme/i,   'Shopify'],
+      [/wix\.com|_wixCss/i,                   'Wix'],
+      [/cdn\.prod\.website-files\.com/i,      'Webflow'],
+      [/joomla/i,                             'Joomla'],
+      [/Drupal\.settings|\/sites\/default\//i,'Drupal'],
+      [/__NEXT_DATA__|_next\/static/i,        'Next.js'],
+      [/__NUXT__/i,                           'Nuxt.js'],
+      [/data-reactroot|react-dom/i,           'React'],
+      [/ng-version=/i,                        'Angular'],
+      [/cdn\.jsdelivr\.net\/npm\/vue|__VUE__/i,'Vue.js'],
+      [/Squarespace/i,                        'Squarespace'],
+      [/ghost-url|content="Ghost"/i,          'Ghost'],
+      [/hs-scripts\.com|hubspot/i,            'HubSpot'],
+      [/cloudflare/i,                         'Cloudflare'],
+      [/__cf_bm|cf_clearance/i,               'Cloudflare'],
+    ];
+    for (const [pattern, name] of htmlSignatures) {
+      if (pattern.test(html)) tech.add(name);
+    }
+
     if (tech.size) merged.technologies = [...tech];
 
     // Robots.txt
@@ -429,6 +501,28 @@ module.exports = async (req, res) => {
     // Email security (SPF / DMARC)
     const emailSec = analyseEmailSecurity(txtRecords, dmarcRecords);
     if (emailSec) merged.emailSecurity = emailSec;
+
+    // Certificate Transparency log summary
+    if (certSpotterResult.ok && Array.isArray(certSpotterResult.data)) {
+      const names = new Set();
+      for (const issuance of certSpotterResult.data) {
+        for (const n of (issuance.dns_names || [])) {
+          names.add(String(n).toLowerCase().replace(/^\*\./, ''));
+        }
+      }
+      const subdomainNames = [...names].filter(n => n !== clean && n.endsWith(`.${clean}`));
+      merged.certTransparency = {
+        totalCertificates: certSpotterResult.data.length,
+        uniqueNames: names.size,
+        subdomainCount: subdomainNames.length,
+        sampleSubdomains: subdomainNames.slice(0, 15),
+      };
+    } else {
+      merged.certTransparency = { totalCertificates: 0, uniqueNames: 0, subdomainCount: 0 };
+    }
+
+    // Homepage analysis result attached to response
+    if (homepage) merged.homepage = homepage;
 
     // Carbon footprint estimate (based on page transfer size heuristic)
     // Using Digital Beacon methodology: average page ~2MB = ~0.5g CO2
