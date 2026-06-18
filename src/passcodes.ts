@@ -17,7 +17,6 @@
 
 export const VALID_PASSCODES = [
   'BID366026',
-  'BID656532',
   'BID077507',
   'BID103192',
   'BID873231',

@@ -27,7 +27,7 @@ export const Lockscreen: React.FC<LockscreenProps> = ({ onUnlock }) => {
     <div className="lockscreen-overlay">
       <div className="lockscreen-container">
         <div className="lockscreen-content">
-          <h1>BlackAI ⚛ GO</h1>
+          <h1>BlackAI ⚛︎ GO</h1>
           <p>Enter passcode to access the system</p>
 
           <form onSubmit={handleSubmit} className="passcode-form">

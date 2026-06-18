@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { audioContext } from "./utils";
+import { getOrCreateAudioContext } from "./utils";
 import AudioRecordingWorklet from "./worklets/audio-processing";
 import VolMeterWorket from "./worklets/vol-meter";
 
@@ -52,7 +52,12 @@ export class AudioRecorder extends EventEmitter {
 
     this.starting = new Promise(async (resolve, reject) => {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.audioContext = await audioContext({ sampleRate: this.sampleRate });
+      this.audioContext = getOrCreateAudioContext("audio-in", {
+        sampleRate: this.sampleRate,
+      });
+      if (this.audioContext.state === "suspended") {
+        await this.audioContext.resume();
+      }
       this.source = this.audioContext.createMediaStreamSource(this.stream);
 
       const workletName = "audio-recorder-worklet";

@@ -33,7 +33,7 @@ interface AltairProps {
   onShowPhishFilesStealer: () => void;
   onShowDigitalFootprint: () => void;
   onShowURLMasker: () => void;
-  onShowWorldIPTV: () => void;
+  onShowBlackIPTV: () => void;
   onShowPhishMaker: () => void;
   onShowDataBank: () => void;
   onShowAndroidSpyware: () => void;
@@ -266,9 +266,9 @@ const urlMaskerDeclaration: FunctionDeclaration = {
   }
 };
 
-const worldIPTVDeclaration: FunctionDeclaration = {
-  name: "show_world_iptv",
-  description: "Display the World IPTV widget to watch or view world IPTV channels. Use this when the user asks to watch or view world IPTV channels.",
+const blackIPTVDeclaration: FunctionDeclaration = {
+  name: "show_black_iptv",
+  description: "Display the Black IPTV widget to watch or view worldwide IPTV channels. Use this when the user asks to watch or view world IPTV channels.",
   parameters: {
     type: Type.OBJECT,
     properties: {},
@@ -1232,7 +1232,7 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
-function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
+function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowBlackIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
   const [jsonString, setJSONString] = useState<string>("");
   const { client, setConfig, setModel } = useLiveAPIContext();
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -1306,7 +1306,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [phishFilesStealerDeclaration] },
         { functionDeclarations: [digitalFootprintDeclaration] },
         { functionDeclarations: [urlMaskerDeclaration] },
-        { functionDeclarations: [worldIPTVDeclaration] },
+        { functionDeclarations: [blackIPTVDeclaration] },
         { functionDeclarations: [phishMakerDeclaration] },
         { functionDeclarations: [dataBankDeclaration] },
         { functionDeclarations: [androidSpywareDeclaration] },
@@ -1405,8 +1405,8 @@ In order to ask Black AI a question, the user must give the prompt in the conver
           onShowDigitalFootprint();
         } else if (name === urlMaskerDeclaration.name) {
           onShowURLMasker();
-        } else if (name === "show_world_iptv") {
-          onShowWorldIPTV();
+        } else if (name === "show_black_iptv") {
+          onShowBlackIPTV();
         } else if (name === phishMakerDeclaration.name) {
           onShowPhishMaker();
         } else if (name === dataBankDeclaration.name) {
@@ -1543,8 +1543,8 @@ In order to ask Black AI a question, the user must give the prompt in the conver
                     ? `Digital Footprint widget opened.`
                     : fc.name === urlMaskerDeclaration.name
                     ? `URL Masker widget opened.`
-                    : fc.name === "show_world_iptv"
-                    ? `World IPTV widget opened.`
+                    : fc.name === "show_black_iptv"
+                    ? `Black IPTV widget opened.`
                     : fc.name === phishMakerDeclaration.name
                     ? `Phish Maker widget opened.`
                     : fc.name === dataBankDeclaration.name
@@ -1581,7 +1581,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
     client.off("toolcall", onToolCall);
     client.on("toolcall", onToolCall);
     return () => { client.off("toolcall", onToolCall); };
-  }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowWorldIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
+  }, [client, onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowBlackIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowBitchatTracker, onShowBlackEyes, location]);
 
   const embedRef = useRef<HTMLDivElement>(null);
   useEffect(() => {

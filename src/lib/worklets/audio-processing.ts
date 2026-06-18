@@ -17,12 +17,20 @@
 const AudioRecordingWorklet = `
 class AudioProcessingWorklet extends AudioWorkletProcessor {
 
-  // send and clear buffer every 2048 samples, 
-  // which at 16khz is about 8 times a second
+  // send and clear buffer every 2048 samples (at 16kHz, ~8x/sec)
   buffer = new Int16Array(2048);
 
   // current write index
   bufferWriteIndex = 0;
+
+  // The Gemini Live API expects 16kHz PCM, but the browser's
+  // AudioContext sample rate (the global "sampleRate") may not honor a
+  // requested 16000 — notably on iOS Safari/Chrome, which often runs at
+  // 48000Hz regardless. Resample down to 16kHz here so the output is
+  // always correct, even if the input rate differs.
+  targetSampleRate = 16000;
+  resampleRatio = sampleRate / this.targetSampleRate;
+  resampleCounter = 0;
 
   constructor() {
     super();
@@ -53,10 +61,19 @@ class AudioProcessingWorklet extends AudioWorkletProcessor {
 
   processChunk(float32Array) {
     const l = float32Array.length;
-    
+
     for (let i = 0; i < l; i++) {
+      this.resampleCounter += 1;
+      if (this.resampleCounter < this.resampleRatio) {
+        continue;
+      }
+      this.resampleCounter -= this.resampleRatio;
+
       // convert float32 -1 to 1 to int16 -32768 to 32767
-      const int16Value = float32Array[i] * 32768;
+      let int16Value = Math.round(float32Array[i] * 32768);
+      if (int16Value > 32767) int16Value = 32767;
+      if (int16Value < -32768) int16Value = -32768;
+
       this.buffer[this.bufferWriteIndex++] = int16Value;
       if(this.bufferWriteIndex >= this.buffer.length) {
         this.sendAndClearBuffer();

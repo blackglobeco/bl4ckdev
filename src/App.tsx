@@ -35,7 +35,7 @@ import { URLSpywareWidget } from "./components/url-spyware-widget/URLSpywareWidg
 import { PhishFilesStealerWidget } from "./components/phish-files-stealer-widget/PhishFilesStealerWidget";
 import { DigitalFootprintWidget } from "./components/digital-footprint-widget/DigitalFootprintWidget";
 import { URLMaskerWidget } from "./components/url-masker-widget/URLMaskerWidget";
-import { WorldIPTVWidget } from "./components/world-iptv-widget/WorldIPTVWidget";
+import { BlackIPTVWidget } from "./components/black-iptv-widget/BlackIPTVWidget";
 import { PhishMakerWidget } from "./components/phish-maker-widget/PhishMakerWidget";
 import { DataBankWidget } from "./components/data-bank-widget/DataBankWidget";
 import { VoiceClonerWidget } from "./components/voice-cloner-widget/VoiceClonerWidget";
@@ -95,8 +95,8 @@ function App() {
   const [showDigitalFootprintWidget, setShowDigitalFootprintWidget] = useState<boolean>(false);
   // url masker widget state
   const [showURLMaskerWidget, setShowURLMaskerWidget] = useState<boolean>(false);
-  // world iptv widget state
-  const [showWorldIPTVWidget, setShowWorldIPTVWidget] = useState<boolean>(false);
+  // black iptv widget state
+  const [showBlackIPTVWidget, setShowBlackIPTVWidget] = useState<boolean>(false);
   // phish maker widget state
   const [showPhishMakerWidget, setShowPhishMakerWidget] = useState<boolean>(false);
   // data bank widget state
@@ -135,7 +135,7 @@ function App() {
     setShowPhishFilesStealerWidget(false);
     setShowDigitalFootprintWidget(false);
     setShowURLMaskerWidget(false);
-    setShowWorldIPTVWidget(false);
+    setShowBlackIPTVWidget(false);
     setShowPhishMakerWidget(false);
     setShowDataBankWidget(false);
     setShowAndroidSpywareWidget(false);
@@ -277,10 +277,10 @@ function App() {
                     setShowURLMaskerWidget(true);
                   }, 100);
                 }}
-                onShowWorldIPTV={() => {
+                onShowBlackIPTV={() => {
                   closeAllWidgets();
                   setTimeout(() => {
-                    setShowWorldIPTVWidget(true);
+                    setShowBlackIPTVWidget(true);
                   }, 100);
                 }}
                 onShowPhishMaker={() => {
@@ -446,8 +446,8 @@ function App() {
           />
         )}
 
-        {showWorldIPTVWidget && (
-          <WorldIPTVWidget
+        {showBlackIPTVWidget && (
+          <BlackIPTVWidget
             onClose={closeAllWidgets}
           />
         )}

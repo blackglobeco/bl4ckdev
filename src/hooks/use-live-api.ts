@@ -18,7 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GenAILiveClient } from "../lib/genai-live-client";
 import { LiveClientOptions } from "../types";
 import { AudioStreamer } from "../lib/audio-streamer";
-import { audioContext } from "../lib/utils";
+import { getOrCreateAudioContext } from "../lib/utils";
 import VolMeterWorket from "../lib/worklets/vol-meter";
 import { LiveConnectConfig } from "@google/genai";
 
@@ -66,21 +66,34 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     }
   }, []);
 
+  // lazily create (and cache) the output AudioStreamer/AudioContext.
+  // Synchronous: on iOS WebKit, an AudioContext must be created and
+  // resume()'d without any preceding `await`, or the call is no longer
+  // considered to be part of the user-gesture and resume() silently no-ops.
+  const ensureAudioStreamer = useCallback(() => {
+    if (!audioStreamerRef.current) {
+      const AC: typeof AudioContext =
+        window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AC();
+      const streamer = new AudioStreamer(audioCtx);
+      audioStreamerRef.current = streamer;
+      // Don't block on the vumeter worklet — it's only for the volume UI
+      // and shouldn't prevent connect()/playback if it fails to load.
+      streamer
+        .addWorklet<any>("vumeter-out", VolMeterWorket, (ev: any) => {
+          setVolume(ev.data.volume);
+        })
+        .catch((err) => {
+          console.warn("vumeter-out worklet failed to load", err);
+        });
+    }
+    return audioStreamerRef.current;
+  }, [audioStreamerRef, setVolume]);
+
   // register audio for streaming server -> speakers
   useEffect(() => {
-    if (!audioStreamerRef.current) {
-      audioContext({ id: "audio-out" }).then((audioCtx: AudioContext) => {
-        audioStreamerRef.current = new AudioStreamer(audioCtx);
-        audioStreamerRef.current
-          .addWorklet<any>("vumeter-out", VolMeterWorket, (ev: any) => {
-            setVolume(ev.data.volume);
-          })
-          .then(() => {
-            // Successfully added worklet
-          });
-      });
-    }
-  }, [audioStreamerRef]);
+    ensureAudioStreamer();
+  }, [ensureAudioStreamer]);
 
   useEffect(() => {
     const onOpen = () => {
@@ -154,10 +167,31 @@ export function useLiveAPI(options: LiveClientOptions): UseLiveAPIResults {
     if (!config) {
       throw new Error("config has not been set");
     }
+
+    // iOS Safari/Chrome (WebKit) suspends AudioContext until it is resumed
+    // from within a user-gesture handler, and that activation is consumed
+    // by the first `await`. So create/resume the output AND input audio
+    // contexts as the very first synchronous actions of this click handler.
+    // The input context (16kHz) is cached so AudioRecorder (which starts
+    // later, asynchronously, after gesture activation has expired) reuses
+    // this already-running context instead of creating a suspended one.
+    const streamer = ensureAudioStreamer();
+    const outResume = streamer.resume();
+    const inputCtx = getOrCreateAudioContext("audio-in", { sampleRate: 16000 });
+    const inResume =
+      inputCtx.state === "suspended" ? inputCtx.resume() : Promise.resolve();
+
     resetInactivityTimer(); // Clear any existing timer
+
+    try {
+      await Promise.all([outResume, inResume]);
+    } catch (err) {
+      console.warn("Failed to resume audio contexts", err);
+    }
+
     client.disconnect();
     await client.connect(model, config);
-  }, [client, config, model, resetInactivityTimer]);
+  }, [client, config, model, resetInactivityTimer, ensureAudioStreamer]);
 
   const disconnect = useCallback(async () => {
     resetInactivityTimer(); // Clear timer when manually disconnecting

@@ -200,8 +200,8 @@ export const AnimatedBackground: React.FC = () => {
       <canvas ref={canvasRef} className="animated-background" />
       <div className="scanlines" />
       <div className="background-text">
-        <span className="glitch-text" data-text="BlackAI ⚛">
-          BlackAI&nbsp;⚛
+        <span className="glitch-text" data-text="BlackAI ⚛︎">
+          BlackAI&nbsp;⚛︎
         </span>
       </div>
     </div>

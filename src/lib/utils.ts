@@ -20,6 +20,29 @@ export type GetAudioContextOptions = AudioContextOptions & {
 
 const map: Map<string, AudioContext> = new Map();
 
+/**
+ * Synchronously gets (or creates) a cached AudioContext by id.
+ *
+ * iOS Safari/Chrome only treats AudioContext creation/resume as part of a
+ * user gesture if it happens with no preceding `await`. This lets a click
+ * handler create+resume contexts up front (sync), and lets other code
+ * (e.g. AudioRecorder, which starts later/async) reuse the same already-
+ * running context instead of creating its own suspended one.
+ */
+export function getOrCreateAudioContext(
+  id: string,
+  options?: AudioContextOptions
+): AudioContext {
+  let ctx = map.get(id);
+  if (!ctx || ctx.state === "closed") {
+    const AC: typeof AudioContext =
+      window.AudioContext || (window as any).webkitAudioContext;
+    ctx = new AC(options);
+    map.set(id, ctx);
+  }
+  return ctx;
+}
+
 export const audioContext: (
   options?: GetAudioContextOptions
 ) => Promise<AudioContext> = (() => {
