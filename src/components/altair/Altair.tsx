@@ -1232,6 +1232,182 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Cyber Breach Intelligence — OTX AlienVault ─────────────────────────────
+const digitalBreachDeclaration: FunctionDeclaration = {
+  name: "search_digital_breach_intelligence",
+  description:
+    "Search the Cyber Breach Intelligence database to find threat intelligence, " +
+    "malware associations, pulse reports, geo data, passive DNS records, URL lists, reputation scores, " +
+    "and full breach information about an IP address, email address, or web domain. " +
+    "Use this when the user asks about cyber breach intelligence, threat intelligence, breach data, " +
+    "whether an IP, email, or domain has been involved in a breach, is malicious, or has any threat indicators. " +
+    "After receiving results read them aloud — do NOT show any widget.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      indicator_type: {
+        type: Type.STRING,
+        description: "The type of indicator to search: 'ip' for IP addresses, 'email' for email addresses, 'domain' for web domains or hostnames.",
+      },
+      indicator_value: {
+        type: Type.STRING,
+        description: "The actual value to search for (e.g., '8.8.8.8', 'user@example.com', 'example.com').",
+      },
+    },
+    required: ["indicator_type", "indicator_value"],
+  },
+};
+
+const fetchOTXBreachData = async (indicatorType: string, indicatorValue: string): Promise<string> => {
+  try {
+    const response = await fetch(`/api/otx?type=${encodeURIComponent(indicatorType)}&value=${encodeURIComponent(indicatorValue)}`);
+    if (!response.ok) {
+      if (response.status === 404) return `No cyber breach intelligence found for ${indicatorValue} in the cyber breach database.`;
+      if (response.status === 401) return `Cyber Breach authentication failed. Please verify your API key.`;
+      if (response.status === 429) return `Cyber Breach rate limit exceeded. Please try again shortly.`;
+      return `Cyber Breach API returned an error: HTTP ${response.status}.`;
+    }
+    const data = await response.json();
+    const r = data.results ?? {};
+    const lines: string[] = [];
+
+    lines.push(`Cyber Breach Intelligence report for ${indicatorType} indicator: ${indicatorValue}.`);
+
+    // ── General / Pulses ──────────────────────────────────────────────────────
+    const general = r.general ?? {};
+    if (general.pulse_info) {
+      const pi = general.pulse_info;
+      const count = pi.count ?? 0;
+      lines.push(`Found in ${count} Cyber Breach pulse${count !== 1 ? 's' : ''}.`);
+      if (count > 0 && pi.pulses?.length) {
+        const topPulses = pi.pulses.slice(0, 5);
+        const pulseNames = topPulses.map((p: any) => p.name).filter(Boolean).join('; ');
+        if (pulseNames) lines.push(`Top threat pulses: ${pulseNames}.`);
+        const allTags: string[] = [];
+        topPulses.forEach((p: any) => { if (p.tags?.length) allTags.push(...p.tags); });
+        const uniqueTags = [...new Set(allTags)].slice(0, 10);
+        if (uniqueTags.length) lines.push(`Associated threat tags: ${uniqueTags.join(', ')}.`);
+        const adversaries = [...new Set(topPulses.map((p: any) => p.adversary).filter(Boolean))];
+        if (adversaries.length) lines.push(`Known threat actors or adversaries: ${adversaries.join(', ')}.`);
+        const attackIds = [...new Set(topPulses.flatMap((p: any) => p.attack_ids ?? []).map((a: any) => a.id ?? a).filter(Boolean))];
+        if (attackIds.length) lines.push(`MITRE ATT&CK technique IDs: ${attackIds.slice(0, 8).join(', ')}.`);
+        const industries = [...new Set(topPulses.flatMap((p: any) => p.industries ?? []).filter(Boolean))];
+        if (industries.length) lines.push(`Targeted industries: ${industries.join(', ')}.`);
+        const countries = [...new Set(topPulses.flatMap((p: any) => p.targeted_countries ?? []).filter(Boolean))];
+        if (countries.length) lines.push(`Targeted countries: ${countries.join(', ')}.`);
+        const references = [...new Set(topPulses.flatMap((p: any) => p.references ?? []).filter(Boolean))];
+        if (references.length) lines.push(`Threat references: ${references.slice(0, 3).join(', ')}.`);
+      }
+    } else {
+      lines.push(`No cyber breach threat pulse records found for this indicator.`);
+    }
+    if (general.sections?.length) lines.push(`Available intelligence sections: ${general.sections.join(', ')}.`);
+
+    // ── Reputation ────────────────────────────────────────────────────────────
+    const rep = r.reputation ?? {};
+    if (rep.threat_score !== undefined || rep.reputation !== undefined || rep.counts) {
+      const score = rep.threat_score ?? rep.reputation ?? 'N/A';
+      lines.push(`Reputation or threat score: ${score}.`);
+      if (rep.counts) {
+        const c = rep.counts;
+        const parts: string[] = [];
+        if (c.malware_samples) parts.push(`${c.malware_samples} malware sample${c.malware_samples !== 1 ? 's' : ''}`);
+        if (c.url_list)        parts.push(`${c.url_list} URL${c.url_list !== 1 ? 's' : ''}`);
+        if (c.passive_dns)     parts.push(`${c.passive_dns} passive DNS record${c.passive_dns !== 1 ? 's' : ''}`);
+        if (c.http_scans)      parts.push(`${c.http_scans} HTTP scan${c.http_scans !== 1 ? 's' : ''}`);
+        if (parts.length) lines.push(`Intelligence counts: ${parts.join(', ')}.`);
+      }
+    }
+
+    // ── Geo ───────────────────────────────────────────────────────────────────
+    const geo = r.geo ?? {};
+    if (geo.country_name || geo.city || geo.region) {
+      const locParts = [geo.city, geo.region, geo.country_name].filter(Boolean);
+      lines.push(`Geographic location: ${locParts.join(', ')}.`);
+      if (geo.latitude != null && geo.longitude != null)
+        lines.push(`Coordinates: latitude ${geo.latitude}, longitude ${geo.longitude}.`);
+      if (geo.postal_code)  lines.push(`Postal code: ${geo.postal_code}.`);
+      if (geo.asn)          lines.push(`ASN: ${geo.asn}.`);
+      if (geo.organization) lines.push(`Organization or ISP: ${geo.organization}.`);
+    }
+
+    // ── Malware ───────────────────────────────────────────────────────────────
+    const malware = r.malware ?? {};
+    const malwareSamples = malware.data ?? [];
+    if (malwareSamples.length > 0) {
+      lines.push(`Malware associations: ${malwareSamples.length} sample${malwareSamples.length !== 1 ? 's' : ''} linked to this indicator.`);
+      malwareSamples.slice(0, 5).forEach((m: any) => {
+        const hash = m.hash ?? m.sha256 ?? m.md5 ?? '';
+        const detect = m.detections?.av_detections ?? m.detections ?? 0;
+        if (hash) lines.push(`Malware hash: ${hash}${typeof detect === 'number' ? `, detected by ${detect} AV engine${detect !== 1 ? 's' : ''}` : ''}.`);
+      });
+    }
+
+    // ── URL list ──────────────────────────────────────────────────────────────
+    const urlList = r.url_list ?? {};
+    const urls = urlList.url_list ?? [];
+    if (urls.length > 0) {
+      lines.push(`Analyzed URLs: ${urls.length} URL${urls.length !== 1 ? 's' : ''} observed on this indicator.`);
+      const maliciousUrls = urls.filter((u: any) => u.result?.safebrowsing?.response?.matches?.length || u.result?.surbl || u.httpcode >= 400);
+      if (maliciousUrls.length) lines.push(`Flagged or suspicious URLs: ${maliciousUrls.length}.`);
+      const sampleUrls = urls.slice(0, 3).map((u: any) => u.url).filter(Boolean);
+      if (sampleUrls.length) lines.push(`Sample URLs: ${sampleUrls.join(', ')}.`);
+    }
+
+    // ── Passive DNS ───────────────────────────────────────────────────────────
+    const pdns = r.passive_dns ?? {};
+    const dnsRecords = pdns.passive_dns ?? [];
+    if (dnsRecords.length > 0) {
+      lines.push(`Passive DNS records: ${dnsRecords.length} record${dnsRecords.length !== 1 ? 's' : ''} found.`);
+      const hostnames = [...new Set(dnsRecords.slice(0, 5).map((d: any) => d.hostname ?? d.address).filter(Boolean))];
+      if (hostnames.length) lines.push(`Associated hostnames or addresses: ${hostnames.join(', ')}.`);
+      const firstSeen = dnsRecords[dnsRecords.length - 1]?.first ?? '';
+      const lastSeen  = dnsRecords[0]?.last ?? '';
+      if (firstSeen) lines.push(`DNS activity first seen: ${new Date(firstSeen).toUTCString()}.`);
+      if (lastSeen)  lines.push(`DNS activity last seen: ${new Date(lastSeen).toUTCString()}.`);
+    }
+
+    // ── HTTP scans ────────────────────────────────────────────────────────────
+    const http = r.http_scans ?? {};
+    const httpData = http.data ?? [];
+    if (httpData.length > 0) {
+      const latest = httpData[0];
+      if (latest.httpcode) lines.push(`HTTP response code: ${latest.httpcode}.`);
+      if (latest.header)   lines.push(`HTTP server header: ${latest.header}.`);
+      if (latest.path)     lines.push(`Scanned path: ${latest.path}.`);
+    }
+
+    // ── WHOIS ─────────────────────────────────────────────────────────────────
+    const whois = r.whois ?? {};
+    if (whois.registrar || whois.emails || whois.creation_date || whois.updated_date || whois.expiration_date) {
+      if (whois.registrar)       lines.push(`Domain registrar: ${Array.isArray(whois.registrar) ? whois.registrar[0] : whois.registrar}.`);
+      if (whois.emails)          lines.push(`WHOIS contact email${Array.isArray(whois.emails) && whois.emails.length > 1 ? 's' : ''}: ${Array.isArray(whois.emails) ? whois.emails.join(', ') : whois.emails}.`);
+      if (whois.creation_date)   lines.push(`Domain created: ${Array.isArray(whois.creation_date) ? whois.creation_date[0] : whois.creation_date}.`);
+      if (whois.updated_date)    lines.push(`Domain last updated: ${Array.isArray(whois.updated_date) ? whois.updated_date[0] : whois.updated_date}.`);
+      if (whois.expiration_date) lines.push(`Domain expires: ${Array.isArray(whois.expiration_date) ? whois.expiration_date[0] : whois.expiration_date}.`);
+      if (whois.name_servers?.length) lines.push(`Name servers: ${whois.name_servers.join(', ')}.`);
+      if (whois.org)             lines.push(`Registrant organization: ${whois.org}.`);
+      if (whois.country)         lines.push(`Registrant country: ${whois.country}.`);
+    }
+
+    // ── Summary verdict ───────────────────────────────────────────────────────
+    const pulseCount = general.pulse_info?.count ?? 0;
+    if (pulseCount === 0 && malwareSamples.length === 0 && urls.length === 0 && dnsRecords.length === 0) {
+      lines.push(`Overall verdict: This indicator has no known threat associations in the cyber breach database. It appears clean.`);
+    } else if (pulseCount > 5 || malwareSamples.length > 0) {
+      lines.push(`Overall verdict: This indicator is HIGH RISK. It has been flagged in multiple threat intelligence reports and is associated with malicious activity.`);
+    } else if (pulseCount > 0) {
+      lines.push(`Overall verdict: This indicator has been flagged in ${pulseCount} threat pulse${pulseCount !== 1 ? 's' : ''}. Exercise caution.`);
+    }
+
+    return lines.join(' ');
+  } catch (err: any) {
+    console.error('[OTX] Fetch error:', err);
+    return `Failed to retrieve breach intelligence for ${indicatorValue}: ${err.message}`;
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 function AltairComponent({ onShowMap, onSearchYouTube, onShowCyberThreatMap, onShowWorldMonitorMap, onShowEmailSpoofer, onShowCallSpoofer, onShowCreditCard, onShowBitcoinPrivkey, onShowPhotoGeo, onShowURLSpyware, onShowPhishFilesStealer, onShowDigitalFootprint, onShowURLMasker, onShowBlackIPTV, onShowPhishMaker, onShowDataBank, onShowAndroidSpyware, onShowVoiceCloner, onShowMS365Hijacker, onShowFlightTracker, onShowDeviceActivityTracker, onShowCode, onShowBitchatTracker, onShowBlackEyes }: AltairProps) {
   const [jsonString, setJSONString] = useState<string>("");
   const { client, setConfig, setModel } = useLiveAPIContext();
@@ -1325,6 +1501,7 @@ In order to ask Black AI a question, the user must give the prompt in the conver
         { functionDeclarations: [censysIPLookupDeclaration] },
         { functionDeclarations: [webCheckDeclaration] },
         { functionDeclarations: [socialSearchDeclaration] },
+        { functionDeclarations: [digitalBreachDeclaration] },
       ],
     });
   }, [setConfig, setModel, location, locationError]);
@@ -1444,13 +1621,15 @@ In order to ask Black AI a question, the user must give the prompt in the conver
       const censysCalls       = toolCall.functionCalls.filter(fc => fc.name === censysIPLookupDeclaration.name);
       const webCheckCalls     = toolCall.functionCalls.filter(fc => fc.name === webCheckDeclaration.name);
       const socialSearchCalls = toolCall.functionCalls.filter(fc => fc.name === socialSearchDeclaration.name);
+      const otxBreachCalls    = toolCall.functionCalls.filter(fc => fc.name === digitalBreachDeclaration.name);
       const otherCalls        = toolCall.functionCalls.filter(fc =>
         fc.name !== getLatestNewsDeclaration.name &&
         fc.name !== ahmiaSearchDeclaration.name &&
         fc.name !== crawlOnionDeclaration.name &&
         fc.name !== censysIPLookupDeclaration.name &&
         fc.name !== webCheckDeclaration.name &&
-        fc.name !== socialSearchDeclaration.name
+        fc.name !== socialSearchDeclaration.name &&
+        fc.name !== digitalBreachDeclaration.name
       );
 
       if (newsCalls.length > 0) {
@@ -1498,6 +1677,18 @@ In order to ask Black AI a question, the user must give the prompt in the conver
           console.log(`[OpenMeasures] search "${term}" on site="${site}"`);
           const result = await fetchOpenMeasures(term, site, limit, querytype);
           return { response: { output: { success: true, result } }, id: fc.id, name: fc.name };
+        })).then((r) => client.sendToolResponse({ functionResponses: r }));
+      }
+      // ─────────────────────────────────────────────────────────────────────
+
+      // ── Digital Breach Intelligence — OTX AlienVault — spoken aloud, no widget ──
+      if (otxBreachCalls.length > 0) {
+        Promise.all(otxBreachCalls.map(async (fc) => {
+          const indicatorType  = String((fc.args as any).indicator_type  ?? '').toLowerCase();
+          const indicatorValue = String((fc.args as any).indicator_value ?? '');
+          console.log(`[OTX] Searching breach intelligence for ${indicatorType}: ${indicatorValue}`);
+          const report = await fetchOTXBreachData(indicatorType, indicatorValue);
+          return { response: { output: { success: true, report } }, id: fc.id, name: fc.name };
         })).then((r) => client.sendToolResponse({ functionResponses: r }));
       }
       // ─────────────────────────────────────────────────────────────────────
