@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.phish-files-stealer-backdrop  { @include base.widget-backdrop; }
+.phish-files-stealer-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.phish-files-stealer-titlebar  { @include base.widget-titlebar; }
+.phish-files-stealer-close-btn { @include base.widget-close-btn; }
+.phish-files-stealer-body      { @include base.widget-body; }
+.phish-files-stealer-iframe    { @include base.widget-iframe; }

@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.voice-cloner-backdrop  { @include base.widget-backdrop; }
+.voice-cloner-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.voice-cloner-titlebar  { @include base.widget-titlebar; }
+.voice-cloner-close-btn { @include base.widget-close-btn; }
+.voice-cloner-body      { @include base.widget-body; }
+.voice-cloner-iframe    { @include base.widget-iframe; }

@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.bitcoin-privkey-backdrop  { @include base.widget-backdrop; }
+.bitcoin-privkey-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.bitcoin-privkey-titlebar  { @include base.widget-titlebar; }
+.bitcoin-privkey-close-btn { @include base.widget-close-btn; }
+.bitcoin-privkey-body      { @include base.widget-body; background: #ffffff; }
+.bitcoin-privkey-iframe    { @include base.widget-iframe; }

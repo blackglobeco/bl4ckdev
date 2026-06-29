@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.email-spoofer-backdrop  { @include base.widget-backdrop; }
+.email-spoofer-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.email-spoofer-titlebar  { @include base.widget-titlebar; }
+.email-spoofer-close-btn { @include base.widget-close-btn; }
+.email-spoofer-body      { @include base.widget-body; }
+.email-spoofer-iframe    { @include base.widget-iframe; }

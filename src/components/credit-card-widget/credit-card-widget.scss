@@ -1,0 +1,52 @@
+@use '../_widget-base' as base;
+
+.credit-card-backdrop  { @include base.widget-backdrop; }
+.credit-card-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.credit-card-titlebar  { @include base.widget-titlebar; }
+.credit-card-close-btn { @include base.widget-close-btn; }
+.credit-card-body      { @include base.widget-body; display: flex; flex-direction: column; }
+
+.credit-card-iframe {
+  @include base.widget-iframe;
+  flex: 1;
+}
+
+.credit-card-footer {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  border-top: 1px solid rgba(255,255,255,.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  span {
+    font-size: 12px;
+    color: rgba(255,255,255,.35);
+    font-family: 'SF Mono', monospace;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.65);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+
+    &:hover {
+      background: rgba(255,255,255,.12);
+      color: #fff;
+    }
+  }
+}
