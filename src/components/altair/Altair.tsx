@@ -1063,7 +1063,7 @@ const fetchLatestNews = async (topic: string, country?: string): Promise<string>
   }
 };
 
-// ── Web-Check domain intelligence helper ──────────────────────────────────────
+// ── Web-Check domain intelligence helper ────────────────────────────────────────────────────
 const fetchWebCheckData = async (domain: string): Promise<string> => {
   try {
     const clean = domain.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').trim();
@@ -1081,146 +1081,217 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
       subResponse.ok ? subResponse.json() : Promise.resolve(null),
     ]);
     if (subData) data.subdomains = subData;
-    const lines: string[] = [];
-    lines.push(`Full domain intelligence report for ${clean}.`);
-    if (data.ip)             lines.push(`IP address: ${data.ip}.`);
-    if (data.asn)            lines.push(`ASN: ${data.asn}.`);
-    if (data.hostingProvider) lines.push(`Hosting provider: ${data.hostingProvider}.`);
-    if (data.isp && data.isp !== data.hostingProvider) lines.push(`ISP: ${data.isp}.`);
-    if (data.isProxy)        lines.push(`This IP is flagged as a proxy or VPN.`);
-    if (data.location) {
-      const loc = data.location;
-      const locParts = [loc.city, loc.region, loc.country].filter(Boolean);
-      if (locParts.length) lines.push(`Server location: ${locParts.join(', ')}.`);
+
+    // Helper: build a crisp spoken sentence only when the value exists
+    const parts: string[] = [];
+    const say = (s: string) => parts.push(s);
+
+    // ── SECTION 1: Score headline ────────────────────────────────────────
+    if (data.securityScore) {
+      const { score, grade, deductions } = data.securityScore;
+      const verdict = grade === 'A' ? 'looks solid' : grade === 'B' ? 'is decent' : grade === 'C' ? 'needs attention' : grade === 'D' ? 'has serious issues' : 'is critically exposed';
+      say(`${clean} scores ${score} out of 100, grade ${grade} — the site ${verdict}.`);
+      if (deductions?.length) {
+        const top = deductions.slice(0, 3).map((d: any) => d.reason.toLowerCase()).join(', ');
+        say(`The biggest issues are ${top}.`);
+      }
+    } else {
+      say(`Domain intelligence report for ${clean}.`);
     }
+
+    // ── SECTION 2: Hosting & location (one sentence) ──────────────────
+    {
+      const loc = data.location;
+      const hostParts: string[] = [];
+      if (data.ip)              hostParts.push(`IP ${data.ip}`);
+      if (loc?.city || loc?.country) hostParts.push(`located in ${[loc.city, loc.country].filter(Boolean).join(', ')}`);
+      if (data.hostingProvider) hostParts.push(`hosted by ${data.hostingProvider}`);
+      if (data.isProxy)         hostParts.push('flagged as a proxy or VPN');
+      if (hostParts.length)     say(`The server is ${hostParts.join(', ')}.`);
+    }
+
+    // ── SECTION 3: Registration (one sentence) ──────────────────────
     if (data.whois) {
       const w = data.whois;
-      if (w.registrar)    lines.push(`Domain registrar: ${w.registrar}.`);
-      if (w.registeredOn) lines.push(`Registered on: ${w.registeredOn}.`);
-      if (w.expiresOn)    lines.push(`Expires on: ${w.expiresOn}.`);
-      if (w.owner)        lines.push(`Registrant owner: ${w.owner}.`);
-      if (w.nameservers?.length) lines.push(`Nameservers: ${w.nameservers.join(', ')}.`);
+      const wParts: string[] = [];
+      if (w.registrar)    wParts.push(`registered through ${w.registrar}`);
+      if (w.registeredOn) wParts.push(`since ${w.registeredOn}`);
+      if (w.expiresOn)    wParts.push(`expiring ${w.expiresOn}`);
+      if (w.owner)        wParts.push(`owned by ${w.owner}`);
+      if (wParts.length)  say(`Domain is ${wParts.join(', ')}.`);
     }
+
+    // ── SECTION 4: SSL (one sentence, flag issues) ───────────────────
     if (data.ssl) {
       const s = data.ssl;
-      if (s.subject) lines.push(`SSL certificate subject: ${s.subject}.`);
-      if (s.issuer)  lines.push(`SSL issued by: ${s.issuer}.`);
-      lines.push(`SSL certificate is currently ${s.valid ? 'valid' : 'EXPIRED or INVALID'}.`);
-    }
-    if (data.dns) {
-      const dns = data.dns;
-      if (dns.A?.length)  lines.push(`A records: ${dns.A.join(', ')}.`);
-      if (dns.MX?.length) lines.push(`MX records: ${dns.MX.join(', ')}.`);
-      if (dns.NS?.length) lines.push(`Name servers: ${dns.NS.join(', ')}.`);
-    }
-    if (data.openPorts?.length) lines.push(`Open ports: ${data.openPorts.join(', ')}.`);
-    if (data.technologies?.length) lines.push(`Detected technologies: ${data.technologies.join(', ')}.`);
-    if (data.homepage) {
-      const hp = data.homepage;
-      if (hp.title) lines.push(`Page title: "${hp.title}".`);
-      if (hp.generator) lines.push(`CMS/generator meta tag: ${hp.generator}.`);
-      if (hp.externalDomainCount > 0) {
-        lines.push(`Page loads resources from ${hp.externalDomainCount} external domain(s): ${hp.externalDomains.slice(0, 10).join(', ')}.`);
+      if (!s.valid) {
+        say(`SSL certificate is EXPIRED or INVALID — the site is not secure.`);
+      } else if (s.expiringSoon) {
+        say(`SSL is valid but expires in ${s.daysUntilExpiry} day${s.daysUntilExpiry !== 1 ? 's' : ''} — renew immediately.`);
+      } else if (s.selfSigned) {
+        say(`SSL is self-signed by ${s.issuer || 'unknown'} and will not be trusted by browsers.`);
+      } else {
+        say(`SSL is valid, issued by ${s.issuer || 'unknown'}, until ${s.validTo}.`);
       }
+    } else {
+      say(`No SSL certificate detected.`);
     }
-    if (data.certTransparency) {
-      const ct = data.certTransparency;
-      lines.push(`Certificate transparency logs: ${ct.totalCertificates} certificate(s) issued, ${ct.uniqueNames} unique hostname(s) seen.`);
-      if (ct.subdomainCount > 0) {
-        lines.push(`Subdomains seen in cert logs: ${ct.sampleSubdomains.join(', ')}${ct.subdomainCount > ct.sampleSubdomains.length ? ' (and more)' : ''}.`);
-      }
+
+    // ── SECTION 5: Technologies (one sentence) ─────────────────────
+    if (data.technologies?.length || data.homepage?.title) {
+      const techStr = data.technologies?.length ? data.technologies.slice(0, 6).join(', ') : 'unknown stack';
+      const titleStr = data.homepage?.title ? ` — page title is "${data.homepage.title}"` : '';
+      say(`Running ${techStr}${titleStr}.`);
     }
-    if (data.securityHeaders) {
-      const sh = data.securityHeaders;
-      lines.push(`HSTS: ${sh.hsts ? 'enabled' : 'NOT SET'}.`);
-      lines.push(`Content Security Policy: ${sh.csp ? 'set' : 'NOT SET'}.`);
-      lines.push(`Clickjacking protection (X-Frame-Options / frame-ancestors): ${sh.clickjackingProtected ? 'present' : 'MISSING'}.`);
-    }
+
+    // ── SECTION 6: Email security (one sentence) ───────────────────
     if (data.emailSecurity) {
       const em = data.emailSecurity;
-      if (em.spfValid) {
-        lines.push(`SPF record: present, strength is "${em.spfStrength}" (${em.spfStrong ? 'strict — hard fail' : 'weak — not strict'}).`);
-      } else {
-        lines.push(`SPF record: NOT CONFIGURED — anyone can send email as this domain.`);
-      }
-      if (em.dmarcValid) {
-        lines.push(`DMARC record: present, policy is "${em.dmarcPolicy}" (${em.dmarcStrong ? 'enforced' : 'NOT enforced — spoofing still possible'}).`);
-        if (em.dmarcPct && em.dmarcPct !== '100') lines.push(`DMARC applies to only ${em.dmarcPct}% of messages.`);
-        if (em.dmarcSp)    lines.push(`DMARC subdomain policy: ${em.dmarcSp}.`);
-        if (em.dmarcRua)   lines.push(`DMARC aggregate reports sent to: ${em.dmarcRua}.`);
-        if (em.dmarcAdkim) lines.push(`DKIM alignment: ${em.dmarcAdkim === 'r' ? 'relaxed' : 'strict'}.`);
-        if (em.dmarcAspf)  lines.push(`SPF alignment: ${em.dmarcAspf === 'r' ? 'relaxed' : 'strict'}.`);
-      } else {
-        lines.push(`DMARC record: NOT CONFIGURED — no enforcement policy, domain can be spoofed.`);
-      }
-      const spoofVerdict = em.spoofable
-        ? ('YES — ' + (em.spoofReason ?? 'domain is not protected'))
-        : 'NO — domain is protected against email spoofing';
-      lines.push(`Email spoofable: ${spoofVerdict}.`);
+      const emailParts: string[] = [];
+      emailParts.push(`SPF is ${em.spfValid ? (em.spfStrong ? 'strict' : 'weak') : 'missing'}`);
+      emailParts.push(`DMARC is ${em.dmarcValid ? (em.dmarcStrong ? 'enforced' : 'not enforced') : 'missing'}`);
+      emailParts.push(`DKIM is ${em.dkim?.configured ? `configured (${em.dkim.selectorCount} selector${em.dkim.selectorCount !== 1 ? 's' : ''})` : 'not configured'}`);
+      const spoofVerdict = em.spoofable ? 'domain can be spoofed' : 'domain is protected from spoofing';
+      say(`Email security: ${emailParts.join(', ')}. ${spoofVerdict}.`);
     }
+
+    // ── SECTION 7: Security headers (one sentence) ──────────────────
+    if (data.securityHeaders) {
+      const sh = data.securityHeaders;
+      const missing: string[] = [];
+      const weak: string[] = [];
+      if (!sh.hsts) missing.push('HSTS');
+      else if (sh.hstsStrength && !sh.hstsStrength.strong) weak.push('HSTS is weak');
+      if (!sh.csp) missing.push('CSP');
+      else if (sh.cspWeaknesses?.length) weak.push(`CSP has ${sh.cspWeaknesses.length} weakness${sh.cspWeaknesses.length !== 1 ? 'es' : ''}`);
+      if (!sh.clickjackingProtected) missing.push('clickjacking protection');
+      const headerParts: string[] = [];
+      if (missing.length) headerParts.push(`missing: ${missing.join(', ')}`);
+      if (weak.length) headerParts.push(weak.join(', '));
+      if (headerParts.length) say(`Security headers: ${headerParts.join('. ')}.`);
+      else say(`All key security headers are set correctly.`);
+    }
+
+    // ── SECTION 8: Open ports (brief) ─────────────────────────────
+    if (data.openPorts?.length) {
+      if (data.dangerousPorts?.length) {
+        const dp = data.dangerousPorts.map((p: any) => `${p.port} (${p.service})`).join(', ');
+        say(`${data.dangerousPorts.length} dangerous port${data.dangerousPorts.length !== 1 ? 's' : ''} are publicly exposed: ${dp}.`);
+      } else {
+        say(`Open ports: ${data.openPorts.join(', ')} — none flagged as dangerous.`);
+      }
+    }
+
+    // ── SECTION 9: Active attack findings (only if vulnerable) ───────
+    const attackFindings: string[] = [];
+    if (data.pathTraversal?.vulnerable) attackFindings.push('path traversal (filesystem leak)');
+    if (data.reflectedXSS?.vulnerable)  attackFindings.push(`reflected XSS via ${data.reflectedXSS.findings.map((f: any) => '?' + f.param).join(', ')}`);
+    if (data.openRedirect?.vulnerable)  attackFindings.push(`open redirect via ${data.openRedirect.findings.map((f: any) => '?' + f.param).join(', ')}`);
+    if (data.corsTest?.credentialedReflect) attackFindings.push('CORS credential reflection (session hijack risk)');
+    else if (data.corsTest?.reflectedCORS)  attackFindings.push('CORS origin reflection');
+    else if (data.corsTest?.wildcardCORS)   attackFindings.push('CORS wildcard');
+    if (data.httpMethods?.dangerousMethods?.length) attackFindings.push(`dangerous HTTP methods: ${data.httpMethods.dangerousMethods.join(', ')}`);
+    if (attackFindings.length) say(`Active vulnerabilities found: ${attackFindings.join('; ')}.`);
+
+    // ── SECTION 10: Exposed files & secrets (brief) ─────────────────
+    const exposureFindings: string[] = [];
+    if (data.exposedFiles?.length)      exposureFindings.push(`${data.exposedFiles.length} sensitive file${data.exposedFiles.length !== 1 ? 's' : ''} exposed (${data.exposedFiles.map((f: any) => f.path).join(', ')})`);
+    if (data.jsBundleSecrets?.length) {
+      const secretTypes = [...new Set(data.jsBundleSecrets.flatMap((b: any) => b.findings.map((f: any) => f.type)))];
+      exposureFindings.push(`hardcoded secrets in JS bundles: ${secretTypes.slice(0, 4).join(', ')}`);
+    }
+    if (data.supabase?.serviceRoleKeyFound) exposureFindings.push('Supabase service_role key exposed client-side');
+    if (data.supabase?.publicBucketCount > 0) exposureFindings.push(`${data.supabase.publicBucketCount} public Supabase storage bucket${data.supabase.publicBucketCount !== 1 ? 's' : ''}`);
+    if (exposureFindings.length) say(`Exposure issues: ${exposureFindings.join('; ')}.`);
+
+    // ── SECTION 11: Login & WebSocket (brief, only if notable) ─────────
+    if (data.loginAudit) {
+      const la = data.loginAudit;
+      const loginIssues: string[] = [];
+      if (la.formUsesGET)            loginIssues.push('uses GET (credentials in URL)');
+      if (!la.hasCSRFToken)          loginIssues.push('no CSRF token');
+      if (la.userEnumeration)        loginIssues.push('leaks account existence');
+      if (loginIssues.length) say(`Login form at ${la.loginPath} has issues: ${loginIssues.join(', ')}.`);
+      else say(`Login form found at ${la.loginPath}${la.hasCaptcha ? ' with captcha' : ''}.`);
+    }
+    if (data.webSockets?.found) {
+      const insecure = (data.webSockets.urls as string[]).filter((u: string) => u.startsWith('ws://')).length;
+      say(`WebSocket${data.webSockets.urls.length !== 1 ? 's' : ''} detected${insecure ? `, ${insecure} unencrypted (ws://)` : ' (all encrypted)'}.`);
+    }
+
+    // ── SECTION 12: DNS & CNAME risks (brief) ─────────────────────
+    if (data.danglingCNAMEs?.length) {
+      say(`${data.danglingCNAMEs.length} dangling CNAME${data.danglingCNAMEs.length !== 1 ? 's' : ''} detected pointing to ${data.danglingCNAMEs.map((d: any) => d.provider).join(', ')} — potential subdomain takeover.`);
+    }
+
+    // ── SECTION 13: Subdomains (brief summary) ─────────────────────
     if (data.subdomains?.total > 0) {
       const sub = data.subdomains;
-      lines.push(`Subdomains found: ${sub.total} total (${sub.active ?? 0} with valid SSL, ${sub.expired ?? 0} with expired SSL).`);
+      const subParts: string[] = [`${sub.total} subdomain${sub.total !== 1 ? 's' : ''} found`];
+      if (sub.live > 0)            subParts.push(`${sub.live} live`);
+      if (sub.active > 0)          subParts.push(`${sub.active} with valid SSL`);
+      if (sub.takeoverRisks > 0)   subParts.push(`${sub.takeoverRisks} at takeover risk`);
+      say(`Subdomains: ${subParts.join(', ')}.`);
 
-      if (sub.sources) {
-        const srcParts: string[] = [];
-        if (sub.sources.crtsh        > 0) srcParts.push(`${sub.sources.crtsh} from certificate logs`);
-        if (sub.sources.hackertarget > 0) srcParts.push(`${sub.sources.hackertarget} from HackerTarget`);
-        if (srcParts.length) lines.push(`Sources: ${srcParts.join(', ')}.`);
-      }
+      // Name the takeover-risk ones specifically
+      const riskList = (sub.list ?? []).filter((s: any) => s.takeoverRisk);
+      if (riskList.length) say(`Takeover-risk subdomains: ${riskList.map((s: any) => `${s.subdomain} → ${s.takeoverRisk.provider}`).join(', ')}.`);
 
-      const list: any[] = sub.list ?? [];
-
-      const certActive = list.filter((s: any) => s.expired === false);
-      if (certActive.length) {
-        lines.push(`Active SSL subdomains: ${certActive.map((s: any) => s.subdomain).join(', ')}.`);
-      }
-
-      const noCertList = list.filter((s: any) => s.expired === undefined);
-      if (noCertList.length) {
-        const formatted = noCertList.map((s: any) =>
-          s.ip ? `${s.subdomain} (${s.ip})` : s.subdomain
-        ).join(', ');
-        lines.push(`Additional subdomains (DNS-confirmed, no cert data): ${formatted}.`);
-      }
-
-      const certExpired = list.filter((s: any) => s.expired === true);
-      if (certExpired.length) {
-        lines.push(`Expired SSL subdomains: ${certExpired.map((s: any) => s.subdomain).join(', ')}.`);
-      }
-    } else {
-      lines.push(`No subdomains discovered.`);
+      // Name live subdomains (first 8)
+      const liveList = (sub.list ?? []).filter((s: any) => s.live === true).slice(0, 8);
+      if (liveList.length) say(`Live subdomains: ${liveList.map((s: any) => s.subdomain).join(', ')}.`);
     }
-    const vulns: string[] = [];
-    if (data.ssl?.valid === false)                       vulns.push('CRITICAL: SSL certificate expired or invalid.');
-    if (data.securityHeaders && !data.securityHeaders.hsts) vulns.push('HIGH: HSTS not set — MITM downgrade risk.');
-    if (data.securityHeaders && !data.securityHeaders.csp)  vulns.push('HIGH: CSP missing — XSS vulnerability.');
-    if (data.securityHeaders && !data.securityHeaders.clickjackingProtected) vulns.push('MEDIUM: No clickjacking protection (X-Frame-Options/frame-ancestors missing) — site can be embedded in a malicious iframe.');
-    if (data.emailSecurity) {
-      const emv = data.emailSecurity;
-      if (!emv.spfValid) {
-        vulns.push('HIGH: No SPF record — anyone can send email claiming to be this domain.');
-      } else if (!emv.spfStrong) {
-        vulns.push('MEDIUM: SPF present but weak (' + emv.spfStrength + ') — consider using -all.');
-      }
-      if (!emv.dmarcValid) {
-        vulns.push('HIGH: No DMARC record — no enforcement policy, domain is spoofable.');
-      } else if (!emv.dmarcStrong) {
-        vulns.push('HIGH: DMARC present but policy is "' + emv.dmarcPolicy + '" — not enforced, domain still spoofable.');
+
+    // ── SECTION 14: Cert transparency (brief) ─────────────────────
+    if (data.certTransparency?.totalCertificates > 0) {
+      const ct = data.certTransparency;
+      say(`Certificate logs show ${ct.totalCertificates} certificate${ct.totalCertificates !== 1 ? 's' : ''} issued covering ${ct.uniqueNames} hostname${ct.uniqueNames !== 1 ? 's' : ''}.`);
+    }
+
+    // ── SECTION 15: Final verdict ──────────────────────────────────
+    {
+      const criticals: string[] = [];
+      const highs: string[] = [];
+      const mediums: string[] = [];
+      if (data.ssl?.valid === false || !data.ssl)           criticals.push('invalid SSL');
+      if (data.ssl?.expiringSoon)                           criticals.push('SSL expiring soon');
+      if (data.exposedFiles?.length)                        criticals.push('exposed files');
+      if (data.dangerousPorts?.length)                      criticals.push('dangerous ports open');
+      if (data.danglingCNAMEs?.length)                      criticals.push('dangling CNAMEs');
+      if (data.jsBundleSecrets?.length)                     criticals.push('secrets in JS');
+      if (data.supabase?.serviceRoleKeyFound)               criticals.push('Supabase admin key exposed');
+      if (data.pathTraversal?.vulnerable)                   criticals.push('path traversal');
+      if (data.corsTest?.credentialedReflect)               criticals.push('CORS credential reflection');
+      if (!data.securityHeaders?.hsts)                      highs.push('no HSTS');
+      if (!data.securityHeaders?.csp)                       highs.push('no CSP');
+      if (data.emailSecurity && !data.emailSecurity.dmarcValid) highs.push('no DMARC');
+      if (data.reflectedXSS?.vulnerable)                    highs.push('reflected XSS');
+      if (data.openRedirect?.vulnerable)                    highs.push('open redirect');
+      if (data.httpMethods?.traceEnabled)                   highs.push('TRACE enabled');
+      if (data.loginAudit && !data.loginAudit.hasCSRFToken) highs.push('no CSRF on login');
+      if (data.subdomains?.takeoverRisks > 0)               highs.push('subdomain takeover risk');
+      if (!data.securityHeaders?.clickjackingProtected)     mediums.push('no clickjacking protection');
+      if (data.corsTest?.wildcardCORS)                      mediums.push('CORS wildcard');
+      if (data.emailSecurity && !data.emailSecurity.spfValid) mediums.push('no SPF');
+      if (data.loginAudit?.userEnumeration)                 mediums.push('user enumeration');
+
+      const totalIssues = criticals.length + highs.length + mediums.length;
+      if (totalIssues === 0) {
+        say(`Overall: no major issues detected — this site has a solid security posture.`);
+      } else {
+        const summaryParts: string[] = [];
+        if (criticals.length) summaryParts.push(`${criticals.length} critical (${criticals.join(', ')})`);
+        if (highs.length)     summaryParts.push(`${highs.length} high (${highs.join(', ')})`);
+        if (mediums.length)   summaryParts.push(`${mediums.length} medium (${mediums.join(', ')})`);
+        say(`Summary: ${totalIssues} issue${totalIssues !== 1 ? 's' : ''} found — ${summaryParts.join(', ')}.`);
       }
     }
-    if (vulns.length > 0) {
-      lines.push(`Security issues: ${vulns.join(' ')}`);
-    } else {
-      lines.push(`No major security vulnerabilities detected.`);
-    }
-    return lines.join(' ');
+
+    return parts.join(' ');
   } catch (err: any) {
     return `Failed to retrieve domain intelligence for ${domain}: ${err.message}`;
   }
 };
-// ─────────────────────────────────────────────────────────────────────────────
-
 // ── Cyber Threat Intelligence — OTX AlienVault ─────────────────────────────
 const digitalBreachDeclaration: FunctionDeclaration = {
   name: "search_digital_breach_intelligence",
