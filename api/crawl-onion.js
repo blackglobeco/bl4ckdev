@@ -1,14 +1,17 @@
 const https = require('https');
-const http = require('http');
+const http  = require('http');
+
+// Tor relay running on Render — fetches .onion URLs via Tor and returns JSON
+const TOR_RELAY_URL = process.env.TOR_PROXY_URL || 'https://tor-prox.onrender.com';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
+  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+
+  console.log(`[CrawlOnion] VERSION: tor-relay-v6 | relay: ${TOR_RELAY_URL}`);
 
   const onionUrl = req.query?.url;
   if (!onionUrl) {
@@ -16,144 +19,79 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const onionMatch = onionUrl.match(/([a-z2-7]{16,56}\.onion)(\/[^\s]*)?/i);
-  if (!onionMatch) {
+  if (!onionUrl.match(/[a-z2-7]{16,56}\.onion/i)) {
     res.status(400).json({ error: 'Invalid or missing .onion URL' });
     return;
   }
 
-  const onionHost = onionMatch[1];
-  const onionPath = onionMatch[2] || '/';
-  const bareHost = onionHost.replace(/\.onion$/, '');
-
-  const gateways = [
-    `https://${bareHost}.onion.ly${onionPath}`,
-    `https://${bareHost}.onion.pet${onionPath}`,
-    `https://${bareHost}.tor2web.org${onionPath}`,
-    `https://${bareHost}.tor2web.fi${onionPath}`,
-    `https://${bareHost}.onion.ws${onionPath}`,
-    `https://${bareHost}.onion.sh${onionPath}`,
-  ];
-
-  const fetchViaGateway = (gatewayUrl, depth = 0) => {
+  // Call the Tor relay REST API — simple HTTP GET, no proxy protocol needed
+  const fetchFromRelay = (targetUrl) => {
     return new Promise((resolve, reject) => {
-      if (depth > 3) { reject(new Error('Too many redirects')); return; }
-      const parsed = new URL(gatewayUrl);
-      const lib = parsed.protocol === 'https:' ? https : http;
+      const endpoint = `${TOR_RELAY_URL}/fetch?url=${encodeURIComponent(targetUrl)}`;
+      const parsed   = new URL(endpoint);
+      const lib      = parsed.protocol === 'https:' ? https : http;
 
       const options = {
         hostname: parsed.hostname,
-        path: parsed.pathname + parsed.search,
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'identity',
-          'Connection': 'close',
-        },
+        path:     parsed.pathname + parsed.search,
+        method:   'GET',
+        headers:  { 'Accept': 'application/json' },
       };
 
       const request = lib.request(options, (response) => {
-        if ([301, 302, 303, 307, 308].includes(response.statusCode) && response.headers.location) {
-          response.resume();
-          const location = response.headers.location;
-          const redirectUrl = location.startsWith('http')
-            ? location
-            : `${parsed.protocol}//${parsed.hostname}${location}`;
-          fetchViaGateway(redirectUrl, depth + 1).then(resolve).catch(reject);
-          return;
-        }
-
         let body = '';
-        response.on('data', (chunk) => {
-          body += chunk.toString();
-          if (body.length > 512000) {
-            request.destroy();
-            resolve({ html: body.slice(0, 512000), status: response.statusCode, gateway: gatewayUrl });
+        response.on('data', (chunk) => { body += chunk.toString(); });
+        response.on('end', () => {
+          try {
+            resolve({ data: JSON.parse(body), status: response.statusCode });
+          } catch {
+            reject(new Error(`Invalid JSON from relay: ${body.slice(0, 100)}`));
           }
         });
-        response.on('end', () => resolve({ html: body, status: response.statusCode, gateway: gatewayUrl }));
         response.on('error', reject);
       });
 
       request.on('error', reject);
-      request.setTimeout(20000, () => { request.destroy(); reject(new Error('Request timed out')); });
+      // Tor can be slow — allow 35s (within Vercel's 5min function limit)
+      request.setTimeout(35000, () => {
+        request.destroy();
+        reject(new Error('Relay timed out after 35s'));
+      });
       request.end();
     });
   };
 
-  const extractText = (html) => {
-    let text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<noscript[\s\S]*?<\/noscript>/gi, '');
-    text = text.replace(/<\/(p|div|li|tr|h[1-6]|br|section|article|header|footer)>/gi, '\n');
-    text = text.replace(/<[^>]+>/g, ' ');
-    text = text
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
-      .replace(/&[a-z]+;/gi, ' ');
-    return text.split('\n').map(l => l.trim()).filter(l => l.length > 0).join('\n');
-  };
+  try {
+    console.log(`[CrawlOnion] Fetching via Tor relay: ${onionUrl}`);
+    const { data, status } = await fetchFromRelay(onionUrl);
 
-  const extractTitle = (html) => {
-    const match = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
-    return match ? match[1].replace(/<[^>]+>/g, '').trim() : '(no title)';
-  };
-
-  const extractLinks = (html) => {
-    const links = [];
-    const linkRegex = /<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-    let match;
-    while ((match = linkRegex.exec(html)) !== null && links.length < 30) {
-      const href = match[1];
-      const text = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-      if (href && !href.startsWith('#') && !href.startsWith('javascript:') && text) {
-        links.push({ text, href });
-      }
-    }
-    return links;
-  };
-
-  let lastError = '';
-  for (const gateway of gateways) {
-    try {
-      console.log(`[CrawlOnion] Trying: ${gateway}`);
-      const { html, status, gateway: usedGateway } = await fetchViaGateway(gateway);
-
-      if (status >= 400) {
-        lastError = `HTTP ${status} from ${usedGateway}`;
-        console.warn(`[CrawlOnion] ${lastError}`);
-        continue;
-      }
-
-      const title = extractTitle(html);
-      const text = extractText(html);
-      const links = extractLinks(html);
-      const truncated = text.length > 8000 ? text.slice(0, 8000) + '\n\n[... content truncated ...]' : text;
-
-      console.log(`[CrawlOnion] Success via ${usedGateway}`);
-      res.status(200).json({
-        success: true,
-        url: onionUrl,
-        gateway: usedGateway,
-        title,
-        text: truncated,
-        links: links.slice(0, 20),
-        charCount: text.length,
+    if (status !== 200 || !data.success) {
+      console.warn(`[CrawlOnion] Relay error: ${data.error}`);
+      res.status(502).json({
+        success: false,
+        error:   data.error || `Relay returned status ${status}`,
+        url:     onionUrl,
       });
       return;
-
-    } catch (err) {
-      lastError = err.message;
-      console.warn(`[CrawlOnion] Failed: ${lastError}`);
     }
-  }
 
-  res.status(502).json({
-    success: false,
-    error: `All gateways failed. Last error: ${lastError}`,
-    url: onionUrl,
-  });
+    console.log(`[CrawlOnion] Success — ${data.charCount} chars from ${onionUrl}`);
+    res.status(200).json({
+      success:   true,
+      url:       onionUrl,
+      gateway:   TOR_RELAY_URL,
+      title:     data.title,
+      text:      data.text,
+      links:     data.links,
+      charCount: data.charCount,
+    });
+
+  } catch (err) {
+    console.error(`[CrawlOnion] Failed: ${err.message}`);
+    res.status(502).json({
+      success: false,
+      error:   err.message,
+      url:     onionUrl,
+    });
+  }
 };

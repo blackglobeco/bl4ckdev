@@ -82,6 +82,10 @@ module.exports = async (req, res) => {
     console.log(`[Ahmia] Fetching search results: ${searchPath}`);
     const { html, statusCode } = await fetchUrl('ahmia.fi', searchPath, homeCookies);
 
+    // #2: Normalize URL for dedup — strip trailing slash before comparing
+    const normalizeUrl = (u) => u.replace(/\/+$/, '').toLowerCase();
+    const seenUrls = new Set();
+
     const results = [];
     const olStart = html.indexOf('<ol class="searchResults">');
     const resultArea = olStart !== -1 ? html.substring(olStart) : html;
@@ -101,6 +105,20 @@ module.exports = async (req, res) => {
         url = hrefMatch[1];
       }
 
+      if (!url) continue;
+
+      // #3: Secondary regex extraction — catch .onion links not in redirect_url param
+      if (!url.match(/[a-z2-7]{16,56}\.onion/i)) {
+        const onionMatch = /https?:\/\/[a-z0-9.]+\.onion[^\s"']*/i.exec(block);
+        if (onionMatch) url = onionMatch[0];
+        else continue;
+      }
+
+      // #2: Deduplicate using normalized URL
+      const key = normalizeUrl(url);
+      if (seenUrls.has(key)) continue;
+      seenUrls.add(key);
+
       const titleMatch = /<a[^>]+>([\s\S]*?)<\/a>/i.exec(block);
       const title = titleMatch
         ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
@@ -111,7 +129,6 @@ module.exports = async (req, res) => {
         ? descMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
         : 'No description available';
 
-      if (!url) continue;
       results.push({ title, description, url });
     }
 
