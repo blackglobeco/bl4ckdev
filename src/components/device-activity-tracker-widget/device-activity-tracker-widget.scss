@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.device-activity-tracker-backdrop  { @include base.widget-backdrop; }
+.device-activity-tracker-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.device-activity-tracker-titlebar  { @include base.widget-titlebar; }
+.device-activity-tracker-close-btn { @include base.widget-close-btn; }
+.device-activity-tracker-body      { @include base.widget-body; }
+.device-activity-tracker-iframe    { @include base.widget-iframe; }

@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.ms365-hijacker-backdrop  { @include base.widget-backdrop; }
+.ms365-hijacker-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.ms365-hijacker-titlebar  { @include base.widget-titlebar; }
+.ms365-hijacker-close-btn { @include base.widget-close-btn; }
+.ms365-hijacker-body      { @include base.widget-body; }
+.ms365-hijacker-iframe    { @include base.widget-iframe; }
