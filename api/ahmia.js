@@ -101,6 +101,10 @@ function parseAhmiaHtml(html, q) {
       ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
       : '(no title)';
 
+    // Skip results where the title is just a raw URL or a .onion address
+    if (/^https?:\/\//i.test(title) || /[a-z2-7]{16,56}\.onion/i.test(title)) continue;
+    if (title.length < 4) continue;
+
     const descMatch = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);
     const description = descMatch
       ? descMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
@@ -149,8 +153,9 @@ const NAV_URL_RE   = /\/(search|login|register|about|contact|advertise|add[_-]?l
 function isQualityResult(title, url) {
   if (!title || title.trim().length < 4) return false;
   if (NAV_TITLE_RE.test(title.trim())) return false;
-  // Raw URL used as title (relay plain-text fallback) — skip
+  // Raw URL or bare .onion hostname used as title — skip
   if (/^https?:\/\//i.test(title)) return false;
+  if (/[a-z2-7]{16,56}\.onion/i.test(title)) return false;
   if (NAV_URL_RE.test(url)) return false;
   return true;
 }
