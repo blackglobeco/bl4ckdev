@@ -663,8 +663,16 @@ module.exports = async (req, res) => {
     const dmarcStrong = dmarcApexStrong && dmarcSubStrong;
     const spoofable = !dmarcStrong;
     let spoofReason = '';
-    if (!spf) spoofReason += 'No SPF record. ';
-    else if (!spfStrong) spoofReason += `SPF uses "${spfStrength}" — weak. `;
+    // SPF weakness is only a meaningful risk when DMARC isn't compensating
+    if (!spf) {
+      spoofReason += 'No SPF record. ';
+    } else if (!spfStrong) {
+      if (dmarcStrong) {
+        spoofReason += `SPF uses "${spfStrength}" but DMARC ${dmarcPolicy} policy mitigates risk. `;
+      } else {
+        spoofReason += `SPF uses "${spfStrength}" — weak, and DMARC is not fully enforced. `;
+      }
+    }
     if (!dmarc) spoofReason += 'No DMARC record. ';
     else if (!dmarcApexStrong) spoofReason += `DMARC apex policy is "${dmarcPolicy}" — not enforced. `;
     else if (!dmarcSubStrong) spoofReason += `DMARC subdomain policy (sp=${dmarcSpPolicy}) — subdomains unprotected. `;
