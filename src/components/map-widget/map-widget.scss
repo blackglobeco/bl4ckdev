@@ -1,0 +1,32 @@
+@use '../_widget-base' as base;
+
+.map-backdrop  { @include base.widget-backdrop; }
+
+.map-widget {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+
+  &.loading,
+  &.error {
+    height: auto;
+    min-height: 220px;
+    max-height: 300px;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.map-titlebar  { @include base.widget-titlebar; }
+.map-close-btn { @include base.widget-close-btn; }
+.map-body      { @include base.widget-body; }
+.map-iframe    { @include base.widget-iframe; }
+
+.map-status {
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.map-error { color: #e84040; }

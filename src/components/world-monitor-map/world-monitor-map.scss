@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.world-monitor-backdrop  { @include base.widget-backdrop; }
+.world-monitor-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.world-monitor-titlebar  { @include base.widget-titlebar; }
+.world-monitor-close-btn { @include base.widget-close-btn; }
+.world-monitor-body      { @include base.widget-body; }
+.world-monitor-iframe    { @include base.widget-iframe; }

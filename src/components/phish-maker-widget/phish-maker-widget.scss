@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.phish-maker-backdrop  { @include base.widget-backdrop; }
+.phish-maker-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.phish-maker-titlebar  { @include base.widget-titlebar; }
+.phish-maker-close-btn { @include base.widget-close-btn; }
+.phish-maker-body      { @include base.widget-body; }
+.phish-maker-iframe    { @include base.widget-iframe; }
