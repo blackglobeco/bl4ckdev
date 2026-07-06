@@ -1,12 +1,6 @@
 /**
  * api/verify-passcode.js
  * Server-side passcode validation — passcodes never reach the client bundle.
- *
- * Vercel env var required:
- *   VALID_PASSCODES=BID366026,BID091939,BID327941
- *
- * Set this in: Vercel Dashboard → Project → Settings → Environment Variables
- * Then REMOVE the src/passcodes.ts file and the 3 hardcoded values.
  */
 
 export default function handler(req, res) {
