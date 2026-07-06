@@ -1089,7 +1089,7 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
     // ── SECTION 1: Score headline ────────────────────────────────────────
     if (data.securityScore) {
       const { score, grade, deductions } = data.securityScore;
-      const verdict = grade === 'A' ? 'looks solid' : grade === 'B' ? 'is decent' : grade === 'C' ? 'needs attention' : grade === 'D' ? 'has serious issues' : 'is critically exposed';
+      const verdict = grade === 'A' ? 'looks solid' : grade === 'B' ? 'is decent' : grade === 'C' ? 'needs attention' : grade === 'D' ? 'has serious issues' : grade === 'E' ? 'is severely exposed' : 'is critically exposed';
       say(`${clean} scores ${score} out of 100, grade ${grade} — the site ${verdict}.`);
       if (deductions?.length) {
         const top = deductions.slice(0, 3).map((d: any) => d.reason.toLowerCase()).join(', ');
@@ -1148,21 +1148,35 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
     if (data.emailSecurity) {
       const em = data.emailSecurity;
       const emailParts: string[] = [];
-      emailParts.push(`SPF is ${em.spfValid ? (em.spfStrong ? 'strict' : 'weak') : 'missing'}`);
-      emailParts.push(`DMARC is ${em.dmarcValid ? (em.dmarcStrong ? 'enforced' : 'not enforced') : 'missing'}`);
+      const spfLabel = !em.spfValid ? 'missing'
+        : em.spfStrong ? 'strict'
+        : em.dmarcStrong ? 'soft-fail but covered by DMARC'
+        : 'weak';
+      emailParts.push(`SPF is ${spfLabel}`);
+      const dmarcLabel = !em.dmarcValid ? 'missing'
+        : em.dmarcStrong ? 'enforced'
+        : em.dmarcPolicy === 'none' ? 'in monitor-only mode (p=none)'
+        : 'not enforced';
+      emailParts.push(`DMARC is ${dmarcLabel}`);
       emailParts.push(`DKIM is ${em.dkim?.configured ? `configured (${em.dkim.selectorCount} selector${em.dkim.selectorCount !== 1 ? 's' : ''})` : 'not configured'}`);
       const spoofVerdict = em.spoofable ? 'domain can be spoofed' : 'domain is protected from spoofing';
       say(`Email security: ${emailParts.join(', ')}. ${spoofVerdict}.`);
     }
 
     // ── SECTION 7: Security headers (one sentence) ──────────────────
-    if (data.securityHeaders) {
+    if (data.headersScanned === false) {
+      parts.push('Header scan timed out — security headers could not be evaluated this run.');
+    } else if (data.securityHeaders) {
       const sh = data.securityHeaders;
       const missing: string[] = [];
       const weak: string[] = [];
       if (!sh.hsts) missing.push('HSTS');
-      else if (sh.hstsStrength && !sh.hstsStrength.strong) weak.push('HSTS is weak');
-      if (!sh.csp) missing.push('CSP');
+      else {
+        if (!sh.hstsStrength?.includesSubdomains) weak.push('HSTS missing includeSubDomains');
+        if (!sh.hstsStrength?.preload) weak.push('HSTS missing preload');
+        if ((sh.hstsStrength?.maxAge ?? 0) < 31536000) weak.push('HSTS max-age too short');
+      }
+      if (!sh.csp) missing.push('CSP — critical risk');
       else if (sh.cspWeaknesses?.length) weak.push(`CSP has ${sh.cspWeaknesses.length} weakness${sh.cspWeaknesses.length !== 1 ? 'es' : ''}`);
       if (!sh.clickjackingProtected) missing.push('clickjacking protection');
       const headerParts: string[] = [];
@@ -1262,15 +1276,16 @@ const fetchWebCheckData = async (domain: string): Promise<string> => {
       if (data.supabase?.serviceRoleKeyFound)               criticals.push('Supabase admin key exposed');
       if (data.pathTraversal?.vulnerable)                   criticals.push('path traversal');
       if (data.corsTest?.credentialedReflect)               criticals.push('CORS credential reflection');
-      if (!data.securityHeaders?.hsts)                      highs.push('no HSTS');
-      if (!data.securityHeaders?.csp)                       highs.push('no CSP');
+      if (data.headersScanned !== false && !data.securityHeaders?.hsts)  highs.push('no HSTS');
+      if (data.headersScanned !== false && !data.securityHeaders?.csp)   criticals.push('no CSP');
       if (data.emailSecurity && !data.emailSecurity.dmarcValid) highs.push('no DMARC');
+      if (data.emailSecurity?.dmarcPolicy === 'none') mediums.push('DMARC monitor-only');
       if (data.reflectedXSS?.vulnerable)                    highs.push('reflected XSS');
       if (data.openRedirect?.vulnerable)                    highs.push('open redirect');
       if (data.httpMethods?.traceEnabled)                   highs.push('TRACE enabled');
       if (data.loginAudit && !data.loginAudit.hasCSRFToken) highs.push('no CSRF on login');
       if (data.subdomains?.takeoverRisks > 0)               highs.push('subdomain takeover risk');
-      if (!data.securityHeaders?.clickjackingProtected)     mediums.push('no clickjacking protection');
+      if (data.headersScanned !== false && !data.securityHeaders?.clickjackingProtected) mediums.push('no clickjacking protection');
       if (data.corsTest?.wildcardCORS)                      mediums.push('CORS wildcard');
       if (data.emailSecurity && !data.emailSecurity.spfValid) mediums.push('no SPF');
       if (data.loginAudit?.userEnumeration)                 mediums.push('user enumeration');
