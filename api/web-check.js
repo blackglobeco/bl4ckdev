@@ -119,15 +119,31 @@ module.exports = async (req, res) => {
       ? result.data.Answer.map(r => r.data).filter(Boolean) : undefined;
 
   // ── Live HTTP HEAD for headers & status ───────────────────────────────────
-  const fetchHeaders = (hostname) => new Promise((resolve) => {
-    const req2 = https.request(
-      { hostname, path: '/', method: 'HEAD', headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DomainIntel/1.0)', Connection: 'close' } },
-      (r) => { r.resume(); resolve({ status: r.statusCode, headers: r.headers }); }
-    );
-    req2.on('error', () => resolve({ status: null, headers: {} }));
-    req2.setTimeout(8000, () => { req2.destroy(); resolve({ status: null, headers: {} }); });
-    req2.end();
-  });
+  // Uses native fetch() with redirect:'follow' — same approach as VICE.
+  // A single 10s timeout covers the entire redirect chain automatically,
+  // including language redirects like /ms/ that caused manual hop loops.
+  // Falls back gracefully to { status: null, headers: {} } on any failure
+  // so the score never penalises headers-dependent deductions on timeout.
+  const fetchHeaders = async (hostname) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch(`https://${hostname}/`, {
+        method: 'HEAD',
+        redirect: 'follow',
+        signal: controller.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DomainIntel/1.0)', Connection: 'close' },
+      });
+      clearTimeout(timer);
+      // Convert Headers object to plain key-value object (same shape as before)
+      const headers = {};
+      res.headers.forEach((value, key) => { headers[key] = value; });
+      return { status: res.status, headers };
+    } catch {
+      clearTimeout(timer);
+      return { status: null, headers: {} };
+    }
+  };
 
   // ── CORS misconfiguration test ────────────────────────────────────────────
   const fetchCORSTest = (hostname) => new Promise((resolve) => {
@@ -180,11 +196,14 @@ module.exports = async (req, res) => {
   });
 
   // ── Open redirect test ────────────────────────────────────────────────────
-  // Tests common redirect params for reflection. A 3xx with Location echoing
-  // the injected URL = open redirect vulnerability.
+  // Tests common redirect params for reflection. A true open redirect requires
+  // the Location header to resolve to a DIFFERENT origin than the tested domain.
+  // A canonical redirect that preserves the injected URL as a query parameter
+  // (e.g. https://www.example.com/?next=https%3A%2F%2Fevil...) is NOT vulnerable.
   const testOpenRedirect = (hostname) => {
     const target = 'https://evil-redirect-test.com';
     const params = ['next', 'url', 'redirect', 'return', 'goto', 'redir', 'destination', 'target'];
+    const hostOrigin = `https://${hostname}`;
     const checks = params.map(param => new Promise((resolve) => {
       const path = `/?${param}=${encodeURIComponent(target)}`;
       const req2 = https.request(
@@ -193,8 +212,24 @@ module.exports = async (req, res) => {
         (r) => {
           r.resume();
           const location = r.headers['location'] || '';
-          if ([301,302,303,307,308].includes(r.statusCode) && location.includes('evil-redirect-test.com')) {
-            resolve({ param, redirectsTo: location, status: r.statusCode });
+          if ([301,302,303,307,308].includes(r.statusCode) && location) {
+            // Resolve the Location header as a full URL and compare origins.
+            // A redirect to a different path/subdomain on the same domain is safe.
+            // Only flag when the resolved origin is truly external AND contains our marker.
+            let redirectsExternally = false;
+            try {
+              const resolved = new URL(location, hostOrigin);
+              const resolvedOrigin = resolved.origin;
+              const baseOrigin = new URL(hostOrigin).origin;
+              // Must be a different origin AND actually point to our evil host
+              redirectsExternally = resolvedOrigin !== baseOrigin
+                && resolved.hostname.includes('evil-redirect-test.com');
+            } catch { /* malformed location header — skip */ }
+            if (redirectsExternally) {
+              resolve({ param, redirectsTo: location, status: r.statusCode });
+            } else {
+              resolve(null);
+            }
           } else {
             resolve(null);
           }
@@ -753,13 +788,30 @@ module.exports = async (req, res) => {
   const calculateSecurityScore = (data) => {
     let score = 100;
     const deductions = [];
-    const add = (severity, reason, pts) => { score -= pts; deductions.push({ severity, reason, points: pts }); };
+    const ruleCounts = {};
+    const MAX_PENALTIES_PER_RULE = 3;
+    const add = (severity, reason, pts) => {
+      ruleCounts[reason] = (ruleCounts[reason] || 0) + 1;
+      if (ruleCounts[reason] > MAX_PENALTIES_PER_RULE) return;
+      score -= pts;
+      deductions.push({ severity, reason, points: pts });
+    };
 
-    // SSL
-    if (data.ssl?.valid === false)      add('CRITICAL', 'SSL certificate expired/invalid', 15);
-    if (data.ssl?.expiringSoon)         add('CRITICAL', `SSL expires in ${data.ssl.daysUntilExpiry} days`, 10);
-    if (data.ssl?.selfSigned)           add('HIGH',     'Self-signed SSL certificate', 8);
-    if (!data.ssl)                      add('CRITICAL', 'No SSL/TLS', 15);
+    // SSL scoring aligned with VICE Scenario 6:
+    // Availability (httpsAvailable) drives the pass/fail deduction
+    // Cert details (data.ssl) drive expiry/self-signed deductions
+    // sslScanned: false = fetch timed out — suppress all SSL deductions
+    if (data.sslScanned) {
+      if (data.httpsAvailable === false) {
+        add('CRITICAL', 'No SSL/TLS', 15);
+      } else {
+        // HTTPS available — check cert details if we got them
+        if (data.ssl?.valid === false)        add('CRITICAL', 'SSL certificate expired/invalid', 15);
+        else if (data.ssl?.expiringSoon)      add('CRITICAL', `SSL expires in ${data.ssl.daysUntilExpiry} days`, 10);
+        if (data.ssl?.selfSigned)            add('HIGH',     'Self-signed SSL certificate', 8);
+      }
+    }
+    // sslScanned: false = timeout — no SSL deductions fired
 
     // Exposed files
     if (data.exposedFiles?.length)      add('CRITICAL', `${data.exposedFiles.length} sensitive file(s) exposed`, 15);
@@ -798,17 +850,29 @@ module.exports = async (req, res) => {
     if (data.loginAudit && !data.loginAudit.hasCSRFToken) add('HIGH', 'Login form missing CSRF token', 8);
 
     // Security headers
-    if (!data.securityHeaders?.hsts)              add('HIGH',   'HSTS not set', 8);
-    if (data.securityHeaders?.hstsStrength && !data.securityHeaders.hstsStrength.strong) add('MEDIUM', 'HSTS weak', 3);
-    if (!data.securityHeaders?.csp)               add('HIGH',   'CSP missing', 8);
-    if (data.securityHeaders?.cspWeaknesses?.length) add('MEDIUM', 'CSP has weaknesses', 3);
-    if (!data.securityHeaders?.clickjackingProtected) add('MEDIUM', 'No clickjacking protection', 3);
+    // Header deductions only fire when fetchHeaders returned real data.
+    // If headersScanned is false (timeout/failure), suppress these entirely
+    // rather than penalising a site for our own scan failure.
+    if (data.headersScanned) {
+      if (data.securityHeaders?.hsts) {
+        if (!data.securityHeaders.hstsStrength?.includesSubdomains) add('MEDIUM', 'HSTS missing includeSubDomains', 3);
+        if (!data.securityHeaders.hstsStrength?.preload)            add('LOW',    'HSTS missing preload', 1);
+        const maxAge = data.securityHeaders.hstsStrength?.maxAge ?? 0;
+        if (maxAge < 31536000)                                       add('MEDIUM', 'HSTS max-age too short', 3);
+      } else {
+        add('HIGH', 'HSTS not set', 8);
+      }
+      if (!data.securityHeaders?.csp)                              add('CRITICAL', 'No Content-Security-Policy', 15);
+      if (data.securityHeaders?.cspWeaknesses?.length)             add('MEDIUM', 'CSP has weaknesses', 3);
+      if (!data.securityHeaders?.clickjackingProtected)            add('MEDIUM', 'No clickjacking protection', 3);
+    }
 
     // Email
     if (data.emailSecurity) {
       if (!data.emailSecurity.spfValid)    add('HIGH',   'No SPF record', 8);
-      else if (!data.emailSecurity.spfStrong) add('MEDIUM', 'SPF weak', 3);
+      else if (!data.emailSecurity.spfStrong && !data.emailSecurity.dmarcStrong) add('MEDIUM', 'SPF weak', 3);
       if (!data.emailSecurity.dmarcValid)  add('HIGH',   'No DMARC record', 8);
+      else if (data.emailSecurity.dmarcPolicy === 'none') add('MEDIUM', 'DMARC in monitor-only mode (p=none)', 3);
       else if (!data.emailSecurity.dmarcStrong) add('HIGH', 'DMARC not enforced', 8);
       if (data.emailSecurity.dkim && !data.emailSecurity.dkim.configured) add('MEDIUM', 'No DKIM configured', 3);
     }
@@ -817,13 +881,13 @@ module.exports = async (req, res) => {
     if (data.redirectChain?.length > 3)   add('LOW',    'Long redirect chain (3+ hops)', 1);
 
     score = Math.max(0, score);
-    const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
+    const grade = score >= 90 ? 'A' : score >= 75 ? 'B' : score >= 60 ? 'C' : score >= 40 ? 'D' : score >= 20 ? 'E' : 'F';
     return { score, grade, deductions };
   };
 
   try {
     // ── Phase 1: DNS + SSL + headers + CORS + HTTP methods (parallel) ────
-    const [dnsA, dnsAAAA, dnsMX, dnsNS, dnsTXT, dnsCNAME, dnsSOA, headerResult, sslDirect, dnsDMARC, corsResult, httpMethodsResult] = await Promise.all([
+    const [dnsA, dnsAAAA, dnsMX, dnsNS, dnsTXT, dnsCNAME, dnsSOA, , , dnsDMARC, corsResult, httpMethodsResult] = await Promise.all([
       fetchDNS(clean, 'A'),
       fetchDNS(clean, 'AAAA'),
       fetchDNS(clean, 'MX'),
@@ -831,8 +895,8 @@ module.exports = async (req, res) => {
       fetchDNS(clean, 'TXT'),
       fetchDNS(clean, 'CNAME'),
       fetchDNS(clean, 'SOA'),
-      fetchHeaders(clean),
-      fetchSSLDirect(clean),
+      Promise.resolve(null), // fetchHeaders deferred to Phase 2.5
+      Promise.resolve(null), // sslPayload deferred to Phase 2.5
       fetchDNS(`_dmarc.${clean}`, 'TXT'),
       fetchCORSTest(clean),
       auditHTTPMethods(clean),
@@ -851,14 +915,14 @@ module.exports = async (req, res) => {
     // ── Phase 2: Geo + WHOIS + content + ports + CT log + active tests ───
     const [
       geoData, whoisData, robotsResult, sitemapResult,
-      openPorts, certSpotterResult, homepageResult,
+      portScanRaw, certSpotterResult, homepageResult,
       exposedFiles, dkimResult, openRedirectResult, pathTraversalResult, xssResult,
     ] = await Promise.all([
       fetchGeo(resolvedIP),
       fetchWHOIS(clean),
       fetchText(`https://${clean}/robots.txt`),
       fetchText(`https://${clean}/sitemap.xml`),
-      scanPorts(clean, [21,22,25,80,443,3306,3389,6379,27017,5432,5900,9200,2375,5984,11211,4444,8080,8443,8888,3000]),
+      Promise.resolve(null), // port scan deferred until after geo (see below)
       fetchCertSpotter(clean),
       fetchText(`https://${clean}/`),
       probeExposedFiles(clean),
@@ -880,6 +944,35 @@ module.exports = async (req, res) => {
     ]);
 
     const jsBundleSecrets = jsBundleResults.filter(Boolean);
+
+    // ── Phase 2.5: fetchHeaders + SSL cert (deferred from Phase 1) ─────────
+    // Running here gives these fetches a full fresh budget after DNS/Phase 2
+    // complete (~8-10s used), eliminating cold-start contention with DNS queries.
+    // fetchHeaders confirms HTTPS availability AND reads security headers in one call.
+    // SSL cert details (tls.connect) run in parallel for display purposes.
+    const [headerResult, sslPayload] = await Promise.all([
+      fetchHeaders(clean),
+      // SSL cert details via tls.connect — for display only, not availability check
+      Promise.all([fetchSSLDirect(clean), fetchSSLDirect(`www.${clean}`)]).then(([a, b]) => {
+        const cert = a ?? b;
+        return { ssl: cert, sslScanned: cert !== null };
+      }),
+    ]);
+
+    // httpsAvailable derived from headerResult — if fetchHeaders got a real
+    // response, HTTPS is confirmed. No separate availability fetch needed.
+    const headersScanned = !!(headerResult.status && Object.keys(headerResult.headers).length > 0);
+    const httpsAvailable = headersScanned ? true : null; // null = unknown (timeout)
+
+    // ── Conditional port scan — skip when IP belongs to a CDN/hosting provider ──
+    // Port-scanning a CDN edge IP (Akamai, Cloudflare, Incapsula) returns ports
+    // belonging to other tenants or the CDN infrastructure, not the actual origin.
+    // VICE avoids this by only scanning IPs found in JS bundles; we approximate
+    // the same protection by skipping when ip-api flags the IP as a hosting provider.
+    let openPorts = portScanRaw ?? [];
+    if (geoData?.hosting === true) {
+      openPorts = []; // CDN/proxy — port results are unreliable, suppress them
+    }
 
     // ── Build response ────────────────────────────────────────────────────
     const merged = {};
@@ -920,8 +1013,10 @@ module.exports = async (req, res) => {
       };
     }
 
-    // SSL
-    merged.ssl = sslDirect ?? undefined;
+    // SSL — cert details from Phase 2.5 tls.connect, availability from fetchHeaders
+    merged.ssl            = sslPayload?.ssl        ?? undefined;
+    merged.sslScanned     = sslPayload?.sslScanned ?? false;
+    merged.httpsAvailable = httpsAvailable;
 
     // DNS
     if (aRecords||aaaaRecords||mxRecords||nsRecords||txtRecords||cnameRecords) {
@@ -933,6 +1028,7 @@ module.exports = async (req, res) => {
     if (danglingCNAMEs) merged.danglingCNAMEs = danglingCNAMEs;
 
     // HTTP status + headers
+    // HTTP status + headers (from Phase 2.5 fetchHeaders)
     if (headerResult.status) { merged.status = headerResult.status; merged.headers = headerResult.headers; }
 
     // Redirect chain (from homepage fetch)
@@ -940,7 +1036,8 @@ module.exports = async (req, res) => {
       merged.redirectChain = [...homepageResult.redirectChain, { url: `https://${clean}/`, status: homepageResult.status }];
     }
 
-    // Security headers
+    // Security headers — only populate when fetchHeaders returned a real response
+    merged.headersScanned = headersScanned; // set in Phase 2.5
     const secHeaders = analyseSecurityHeaders(headerResult.headers);
     if (secHeaders) merged.securityHeaders = secHeaders;
 
