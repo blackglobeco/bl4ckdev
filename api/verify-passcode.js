@@ -1,7 +1,7 @@
 /**
  * api/verify-passcode.js
  * Server-side passcode validation — passcodes never reach the client bundle.
- */
+ **/
 
 export default function handler(req, res) {
   // Only allow POST
