@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.call-spoofer-backdrop  { @include base.widget-backdrop; }
+.call-spoofer-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.call-spoofer-titlebar  { @include base.widget-titlebar; }
+.call-spoofer-close-btn { @include base.widget-close-btn; }
+.call-spoofer-body      { @include base.widget-body; }
+.call-spoofer-iframe    { @include base.widget-iframe; }

@@ -1,0 +1,11 @@
+@use '../_widget-base' as base;
+
+.black-iptv-backdrop  { @include base.widget-backdrop; }
+.black-iptv-widget    {
+  @include base.widget-shell;
+  @include base.widget-responsive;
+}
+.black-iptv-titlebar  { @include base.widget-titlebar; }
+.black-iptv-close-btn { @include base.widget-close-btn; }
+.black-iptv-body      { @include base.widget-body; }
+.black-iptv-iframe    { @include base.widget-iframe; }
